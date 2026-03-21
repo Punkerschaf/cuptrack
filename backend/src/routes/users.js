@@ -116,7 +116,13 @@ router.put('/:id', async (req, res) => {
       createdAt: new Date().toISOString(),
     });
   }
-  if (identifiers !== undefined && user.type === 'drinker') user.identifiers = identifiers;
+  if (identifiers !== undefined && user.type === 'drinker') {
+    const pinCount = identifiers.filter(i => i.type === 'pin').length;
+    if (pinCount > 1) {
+      return res.status(400).json({ error: 'Nur ein PIN-Identifier pro Benutzer erlaubt' });
+    }
+    user.identifiers = identifiers;
+  }
   user.updatedAt = new Date().toISOString();
 
   await db.write();

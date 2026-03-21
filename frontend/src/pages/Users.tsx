@@ -558,7 +558,7 @@ function EditUserDialog({
               </Box>
             ))}
             <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-              <Button size="small" onClick={() => addIdentifier('pin')}>
+              <Button size="small" onClick={() => addIdentifier('pin')} disabled={form.identifiers.some(i => i.type === 'pin')}>
                 + PIN
               </Button>
               <Button size="small" onClick={() => addIdentifier('rfid')}>
