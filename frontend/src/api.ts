@@ -107,10 +107,10 @@ export const api = {
       `/terminal-actions/${encodeURIComponent(slug)}/count-coffee`,
       { method: 'POST', body: JSON.stringify({ sessionToken }) },
     ),
-  updateBalance: (slug: string, sessionToken: string, amount: number) =>
+  updateBalance: (slug: string, sessionToken: string, amount: number, mode: 'add' | 'reset' = 'add') =>
     request<{ success: boolean; newBalance: number }>(
       `/terminal-actions/${encodeURIComponent(slug)}/update-balance`,
-      { method: 'POST', body: JSON.stringify({ sessionToken, amount }) },
+      { method: 'POST', body: JSON.stringify({ sessionToken, amount, mode }) },
     ),
 
   // Version / Health

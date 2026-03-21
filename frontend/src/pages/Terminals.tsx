@@ -27,6 +27,8 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -369,6 +371,7 @@ function EditTerminalDialog({
   const [form, setForm] = useState({
     name: terminal.name,
     machineId: terminal.machineId,
+    quickButtons: terminal.quickButtons || { enabled: false, button1: 5, button2: 10 },
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -430,6 +433,64 @@ function EditTerminalDialog({
             </MenuItem>
           ))}
         </TextField>
+
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            {t('terminals.quickButtons')}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.quickButtons.enabled}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quickButtons: { ...form.quickButtons, enabled: e.target.checked },
+                  })
+                }
+              />
+            }
+            label={t('terminals.quickButtonsEnabled')}
+          />
+          {form.quickButtons.enabled && (
+            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+              <TextField
+                label={t('terminals.quickButton1')}
+                type="number"
+                value={form.quickButtons.button1}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quickButtons: {
+                      ...form.quickButtons,
+                      button1: parseFloat(e.target.value) || 0,
+                    },
+                  })
+                }
+                inputProps={{ step: '0.5', min: '0.01' }}
+                size="small"
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                label={t('terminals.quickButton2')}
+                type="number"
+                value={form.quickButtons.button2}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quickButtons: {
+                      ...form.quickButtons,
+                      button2: parseFloat(e.target.value) || 0,
+                    },
+                  })
+                }
+                inputProps={{ step: '0.5', min: '0.01' }}
+                size="small"
+                sx={{ flex: 1 }}
+              />
+            </Box>
+          )}
+        </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between' }}>
         <Box>

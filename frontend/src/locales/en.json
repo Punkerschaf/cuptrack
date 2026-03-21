@@ -95,7 +95,11 @@
     "machine": "Machine",
     "urlSlug": "URL Slug",
     "slugHelperText": "The URL slug is automatically generated from the name",
-    "machineRequiredInfo": "Create a machine first before you can create a terminal."
+    "machineRequiredInfo": "Create a machine first before you can create a terminal.",
+    "quickButtons": "Quick Top-Up",
+    "quickButtonsEnabled": "Enable quick top-up buttons",
+    "quickButton1": "Amount Button 1 (€)",
+    "quickButton2": "Amount Button 2 (€)"
   },
   "terminalView": {
     "selectName": "Select your name:",
@@ -116,6 +120,9 @@
     "balanceUpdated": "Balance updated!",
     "backToStart": "Returning to start in a few seconds...",
     "currentBalance": "Current balance: {{balance}} €",
+    "addAmountLabel": "Amount to add (€)",
+    "addBalance": "add",
+    "resetBalance": "Reset balance to 0",
     "newBalanceLabel": "New balance (€)",
     "confirm": "Confirm",
     "terminalNotFound": "Terminal not found"

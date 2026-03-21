@@ -33,6 +33,7 @@ export interface Terminal {
   machineId: string;
   type: 'web' | 'api';
   machine?: Machine | null;
+  quickButtons?: { enabled: boolean; button1: number; button2: number };
   createdAt: string;
   updatedAt: string;
 }
@@ -59,7 +60,12 @@ export interface DashboardStats {
 }
 
 export interface TerminalInfo {
-  terminal: { id: string; name: string; slug: string };
+  terminal: {
+    id: string;
+    name: string;
+    slug: string;
+    quickButtons?: { enabled: boolean; button1: number; button2: number };
+  };
   machine: {
     id: string;
     name: string;

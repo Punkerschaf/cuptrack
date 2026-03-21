@@ -201,13 +201,30 @@ export default function TerminalView() {
     }
   };
 
-  const handleUpdateBalance = async () => {
+  const handleAddBalance = async (amount: number) => {
     if (!terminalName) return;
     try {
       const res = await api.updateBalance(
         terminalName,
         sessionToken,
-        parseFloat(newBalance),
+        amount,
+        'add',
+      );
+      setBalance(res.newBalance);
+      setStep('balanceUpdated');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : t('common.error'));
+    }
+  };
+
+  const handleResetBalance = async () => {
+    if (!terminalName) return;
+    try {
+      const res = await api.updateBalance(
+        terminalName,
+        sessionToken,
+        0,
+        'reset',
       );
       setBalance(res.newBalance);
       setStep('balanceUpdated');
@@ -516,7 +533,7 @@ export default function TerminalView() {
             size="large"
             startIcon={<AccountBalanceWalletIcon />}
             onClick={() => {
-              setNewBalance(String(balance));
+              setNewBalance('');
               setStep('editBalance');
             }}
             sx={{ py: 2 }}
@@ -566,6 +583,9 @@ export default function TerminalView() {
 
   // ─── Edit Balance ───
   if (step === 'editBalance') {
+    const quickButtons = info.terminal.quickButtons;
+    const addAmount = parseFloat(newBalance);
+
     return (
       <TerminalWrapper codeName={codeName}>
         <Button
@@ -578,19 +598,66 @@ export default function TerminalView() {
         <Typography variant="h5" textAlign="center" gutterBottom>
           {t('terminalView.editBalance')}
         </Typography>
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Typography color="text.secondary">
             {t('terminalView.currentBalance', { balance: balance.toFixed(2) })}
           </Typography>
         </Box>
-        <Box sx={{ maxWidth: 300, mx: 'auto', mb: 3 }}>
+
+        {/* Quick Buttons */}
+        {quickButtons?.enabled && (
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              justifyContent: 'center',
+              mb: 3,
+              maxWidth: 350,
+              mx: 'auto',
+            }}
+          >
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => handleAddBalance(quickButtons.button1)}
+              sx={{
+                flex: 1,
+                py: 2.5,
+                fontSize: '1.2rem',
+                fontWeight: 700,
+                backgroundColor: '#4CAF50',
+                '&:hover': { backgroundColor: '#388E3C' },
+              }}
+            >
+              + {quickButtons.button1.toFixed(2)} €
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => handleAddBalance(quickButtons.button2)}
+              sx={{
+                flex: 1,
+                py: 2.5,
+                fontSize: '1.2rem',
+                fontWeight: 700,
+                backgroundColor: '#4CAF50',
+                '&:hover': { backgroundColor: '#388E3C' },
+              }}
+            >
+              + {quickButtons.button2.toFixed(2)} €
+            </Button>
+          </Box>
+        )}
+
+        {/* Custom amount input */}
+        <Box sx={{ maxWidth: 300, mx: 'auto', mb: 2 }}>
           <TextField
             fullWidth
-            label={t('terminalView.newBalanceLabel')}
+            label={t('terminalView.addAmountLabel')}
             type="number"
             value={newBalance}
             onChange={(e) => setNewBalance(e.target.value)}
-            inputProps={{ step: '0.01' }}
+            inputProps={{ step: '0.01', min: '0.01' }}
             autoFocus
           />
         </Box>
@@ -599,18 +666,32 @@ export default function TerminalView() {
             display: 'flex',
             gap: 2,
             justifyContent: 'center',
+            mb: 3,
           }}
         >
-          <Button variant="text" onClick={() => setStep('menu')} size="large">
-            {t('common.cancel')}
-          </Button>
           <Button
             variant="contained"
-            onClick={handleUpdateBalance}
+            onClick={() => handleAddBalance(addAmount)}
             size="large"
-            disabled={newBalance === '' || isNaN(parseFloat(newBalance))}
+            disabled={!newBalance || isNaN(addAmount) || addAmount <= 0}
+            sx={{
+              backgroundColor: '#4CAF50',
+              '&:hover': { backgroundColor: '#388E3C' },
+            }}
           >
-            {t('terminalView.confirm')}
+            + {(!newBalance || isNaN(addAmount) || addAmount <= 0) ? '0.00' : addAmount.toFixed(2)} € {t('terminalView.addBalance')}
+          </Button>
+        </Box>
+
+        {/* Reset to 0 */}
+        <Box sx={{ textAlign: 'center' }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleResetBalance}
+            size="large"
+          >
+            {t('terminalView.resetBalance')}
           </Button>
         </Box>
       </TerminalWrapper>

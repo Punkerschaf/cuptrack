@@ -95,7 +95,11 @@
     "machine": "Maschine",
     "urlSlug": "URL-Slug",
     "slugHelperText": "Der URL-Slug wird automatisch aus dem Namen generiert",
-    "machineRequiredInfo": "Erstelle zuerst eine Maschine, bevor du ein Terminal anlegen kannst."
+    "machineRequiredInfo": "Erstelle zuerst eine Maschine, bevor du ein Terminal anlegen kannst.",
+    "quickButtons": "Schnellaufladung",
+    "quickButtonsEnabled": "Schnellaufladebuttons aktivieren",
+    "quickButton1": "Betrag Button 1 (€)",
+    "quickButton2": "Betrag Button 2 (€)"
   },
   "terminalView": {
     "selectName": "Wähle deinen Namen:",
@@ -116,6 +120,9 @@
     "balanceUpdated": "Guthaben aktualisiert!",
     "backToStart": "Zurück zum Start in wenigen Sekunden...",
     "currentBalance": "Aktuelles Guthaben: {{balance}} €",
+    "addAmountLabel": "Betrag zum Aufladen (€)",
+    "addBalance": "aufladen",
+    "resetBalance": "Guthaben auf 0 setzen",
     "newBalanceLabel": "Neues Guthaben (€)",
     "confirm": "Bestätigen",
     "terminalNotFound": "Terminal nicht gefunden"
