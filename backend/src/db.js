@@ -15,6 +15,7 @@ const defaultData = {
   machines: [],
   terminals: [],
   logs: [],
+  settings: { language: 'de' },
 };
 
 const db = await JSONFilePreset(join(dataDir, 'db.json'), defaultData);

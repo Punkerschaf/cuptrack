@@ -19,10 +19,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import type { DashboardStats } from '../types';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,37 +44,37 @@ export default function Dashboard() {
   if (!stats)
     return (
       <Typography color="error">
-        Fehler beim Laden der Statistiken
+        {t('dashboard.errorLoading')}
       </Typography>
     );
 
   const summaryCards = [
     {
-      label: 'Kaffees heute',
+      label: t('dashboard.coffeesToday'),
       value: stats.coffeesToday,
       icon: <LocalCafeIcon fontSize="large" />,
       color: '#6F4E37',
     },
     {
-      label: 'Kaffees gesamt',
+      label: t('dashboard.coffeesTotal'),
       value: stats.totalCoffees,
       icon: <LocalCafeIcon fontSize="large" />,
       color: '#8D6E63',
     },
     {
-      label: 'Benutzer',
+      label: t('dashboard.users'),
       value: stats.totalUsers,
       icon: <PeopleIcon fontSize="large" />,
       color: '#A1887F',
     },
     {
-      label: 'Maschinen',
+      label: t('dashboard.machines'),
       value: stats.totalMachines,
       icon: <CoffeeMakerIcon fontSize="large" />,
       color: '#D4A574',
     },
     {
-      label: 'Terminals',
+      label: t('dashboard.terminals'),
       value: stats.totalTerminals,
       icon: <TabletIcon fontSize="large" />,
       color: '#BCAAA4',
@@ -82,7 +84,7 @@ export default function Dashboard() {
   return (
     <Box>
       <Typography variant="h4" fontWeight={700} gutterBottom>
-        Dashboard
+        {t('dashboard.title')}
       </Typography>
 
       {/* Summary Cards */}
@@ -125,7 +127,7 @@ export default function Dashboard() {
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Kaffees pro Tag (letzte 30 Tage)
+              {t('dashboard.coffeesPerDay')}
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stats.coffeesPerDay}>
@@ -136,11 +138,11 @@ export default function Dashboard() {
                   fontSize={12}
                 />
                 <YAxis allowDecimals={false} />
-                <Tooltip labelFormatter={(d: string) => `Datum: ${d}`} />
+                <Tooltip labelFormatter={(d: string) => t('dashboard.date', { date: d })} />
                 <Bar
                   dataKey="count"
                   fill="#6F4E37"
-                  name="Kaffees"
+                  name={t('dashboard.coffees')}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -153,11 +155,11 @@ export default function Dashboard() {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Top Kaffeetrinker
+                {t('dashboard.topDrinkers')}
               </Typography>
               {stats.topDrinkers.length === 0 ? (
                 <Typography color="text.secondary">
-                  Noch keine Daten
+                  {t('dashboard.noData')}
                 </Typography>
               ) : (
                 stats.topDrinkers.map((d, i) => (
@@ -182,11 +184,11 @@ export default function Dashboard() {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Beliebteste Maschinen
+                {t('dashboard.popularMachines')}
               </Typography>
               {stats.popularMachines.length === 0 ? (
                 <Typography color="text.secondary">
-                  Noch keine Daten
+                  {t('dashboard.noData')}
                 </Typography>
               ) : (
                 stats.popularMachines.map((m, i) => (

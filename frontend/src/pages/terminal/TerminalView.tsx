@@ -19,6 +19,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BackspaceIcon from '@mui/icons-material/Backspace';
 import SearchIcon from '@mui/icons-material/Search';
 import NfcIcon from '@mui/icons-material/Nfc';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../api';
 import type { TerminalInfo } from '../../types';
 
@@ -32,6 +33,7 @@ type Step =
 
 export default function TerminalView() {
   const { terminalName } = useParams<{ terminalName: string }>();
+  const { t } = useTranslation();
   const [info, setInfo] = useState<TerminalInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -100,7 +102,7 @@ export default function TerminalView() {
         const serialNumber: string = event.serialNumber || '';
         if (!serialNumber) {
           setNfcStatus('error');
-          setNfcError('Keine Seriennummer auf dem NFC-Tag gefunden');
+          setNfcError(t('terminalView.nfcNoSerial'));
           setNfcScanning(false);
           setTimeout(() => setNfcStatus('idle'), 3000);
           return;
@@ -117,7 +119,7 @@ export default function TerminalView() {
           setTimeout(() => setStep('menu'), 600);
         } catch {
           setNfcStatus('error');
-          setNfcError('Kein Benutzer mit dieser NFC-Karte gefunden');
+          setNfcError(t('terminalView.nfcNoUser'));
           setNfcScanning(false);
           setTimeout(() => { setNfcStatus('idle'); setNfcError(''); }, 3000);
         }
@@ -135,7 +137,7 @@ export default function TerminalView() {
     } catch (e: unknown) {
       setNfcScanning(false);
       setNfcStatus('error');
-      setNfcError(e instanceof Error ? e.message : 'NFC-Fehler');
+      setNfcError(e instanceof Error ? e.message : t('terminalView.nfcError'));
       setTimeout(() => { setNfcStatus('idle'); setNfcError(''); }, 3000);
     }
   }, [terminalName, nfcSupported, nfcStatus]);
@@ -190,7 +192,7 @@ export default function TerminalView() {
       setBalance(res.newBalance);
       setStep('counting');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     }
   };
 
@@ -205,7 +207,7 @@ export default function TerminalView() {
       setBalance(res.newBalance);
       setStep('balanceUpdated');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     }
   };
 
@@ -220,7 +222,7 @@ export default function TerminalView() {
     return (
       <CenteredBox>
         <Alert severity="error" sx={{ maxWidth: 400 }}>
-          {error || 'Terminal nicht gefunden'}
+          {error || t('terminalView.terminalNotFound')}
         </Alert>
       </CenteredBox>
     );
@@ -247,7 +249,7 @@ export default function TerminalView() {
         </Box>
 
         <Typography variant="h6" gutterBottom sx={{ textAlign: 'center' }}>
-          Wähle deinen Namen:
+          {t('terminalView.selectName')}
         </Typography>
 
         {nfcSupported && (
@@ -274,7 +276,7 @@ export default function TerminalView() {
                 },
               }}
             >
-              {nfcScanning ? 'NFC-Karte jetzt auflegen...' : 'Mit NFC-Karte anmelden'}
+              {nfcScanning ? t('terminalView.nfcScanning') : t('terminalView.nfcLogin')}
             </Button>
             {nfcError && (
               <Typography color="error" variant="body2" sx={{ mt: 1 }}>
@@ -287,7 +289,7 @@ export default function TerminalView() {
         {info.users.length > 8 && (
           <TextField
             size="small"
-            placeholder="Suchen..."
+            placeholder={t('common.search')}
             value={userSearch}
             onChange={(e) => setUserSearch(e.target.value)}
             fullWidth
@@ -326,7 +328,7 @@ export default function TerminalView() {
             {filteredUsers.length === 0 && (
               <Box p={2} textAlign="center">
                 <Typography color="text.secondary">
-                  Keine Benutzer gefunden
+                  {t('terminalView.noUsers')}
                 </Typography>
               </Box>
             )}
@@ -352,11 +354,11 @@ export default function TerminalView() {
           onClick={resetToHome}
           sx={{ mb: 2 }}
         >
-          Zurück
+          {t('common.back')}
         </Button>
-        <Typography variant="h5" textAlign="center" gutterBottom>
-          PIN für <strong>{selectedUserName}</strong>
-        </Typography>
+        <Typography variant="h5" textAlign="center" gutterBottom
+          dangerouslySetInnerHTML={{ __html: t('terminalView.pinFor', { name: selectedUserName }) }}
+        />
 
         {/* PIN dots */}
         <Box
@@ -448,9 +450,9 @@ export default function TerminalView() {
   if (step === 'menu') {
     return (
       <TerminalWrapper>
-        <Typography variant="h5" textAlign="center" gutterBottom>
-          Hallo, <strong>{selectedUserName}</strong>!
-        </Typography>
+        <Typography variant="h5" textAlign="center" gutterBottom
+          dangerouslySetInnerHTML={{ __html: t('terminalView.greeting', { name: selectedUserName }) }}
+        />
         <Box
           sx={{
             textAlign: 'center',
@@ -461,7 +463,7 @@ export default function TerminalView() {
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            Dein Guthaben
+            {t('terminalView.yourBalance')}
           </Typography>
           <Typography
             variant="h3"
@@ -493,7 +495,7 @@ export default function TerminalView() {
               '&:hover': { backgroundColor: '#4E3524' },
             }}
           >
-            Kaffee zählen
+            {t('terminalView.countCoffee')}
             {info.machine && (
               <Typography
                 component="span"
@@ -514,7 +516,7 @@ export default function TerminalView() {
             }}
             sx={{ py: 2 }}
           >
-            Guthaben bearbeiten
+            {t('terminalView.editBalance')}
           </Button>
 
           <Button
@@ -523,7 +525,7 @@ export default function TerminalView() {
             onClick={resetToHome}
             sx={{ py: 1.5 }}
           >
-            Abbrechen
+            {t('common.cancel')}
           </Button>
         </Box>
       </TerminalWrapper>
@@ -537,10 +539,10 @@ export default function TerminalView() {
         <Box sx={{ textAlign: 'center' }}>
           <LocalCafeIcon sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
           <Typography variant="h4" fontWeight={700} color="success.main">
-            Kaffee gezählt!
+            {t('terminalView.coffeeCounted')}
           </Typography>
           <Typography variant="h5" sx={{ mt: 2 }}>
-            Neues Guthaben:{' '}
+            {t('terminalView.newBalance')}{' '}
             <strong
               style={{
                 color: balance >= 0 ? '#4CAF50' : '#F44336',
@@ -550,7 +552,7 @@ export default function TerminalView() {
             </strong>
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 2 }}>
-            Zurück zum Start in wenigen Sekunden...
+            {t('terminalView.backToStart')}
           </Typography>
         </Box>
       </TerminalWrapper>
@@ -566,20 +568,20 @@ export default function TerminalView() {
           onClick={() => setStep('menu')}
           sx={{ mb: 2 }}
         >
-          Zurück
+          {t('common.back')}
         </Button>
         <Typography variant="h5" textAlign="center" gutterBottom>
-          Guthaben bearbeiten
+          {t('terminalView.editBalance')}
         </Typography>
         <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Typography color="text.secondary">
-            Aktuelles Guthaben: {balance.toFixed(2)} €
+            {t('terminalView.currentBalance', { balance: balance.toFixed(2) })}
           </Typography>
         </Box>
         <Box sx={{ maxWidth: 300, mx: 'auto', mb: 3 }}>
           <TextField
             fullWidth
-            label="Neues Guthaben (€)"
+            label={t('terminalView.newBalanceLabel')}
             type="number"
             value={newBalance}
             onChange={(e) => setNewBalance(e.target.value)}
@@ -595,7 +597,7 @@ export default function TerminalView() {
           }}
         >
           <Button variant="text" onClick={() => setStep('menu')} size="large">
-            Abbrechen
+            {t('common.cancel')}
           </Button>
           <Button
             variant="contained"
@@ -603,7 +605,7 @@ export default function TerminalView() {
             size="large"
             disabled={newBalance === '' || isNaN(parseFloat(newBalance))}
           >
-            Bestätigen
+            {t('terminalView.confirm')}
           </Button>
         </Box>
       </TerminalWrapper>
@@ -619,10 +621,10 @@ export default function TerminalView() {
             sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }}
           />
           <Typography variant="h4" fontWeight={700} color="success.main">
-            Guthaben aktualisiert!
+            {t('terminalView.balanceUpdated')}
           </Typography>
           <Typography variant="h5" sx={{ mt: 2 }}>
-            Neues Guthaben:{' '}
+            {t('terminalView.newBalance')}{' '}
             <strong
               style={{
                 color: balance >= 0 ? '#4CAF50' : '#F44336',
@@ -632,7 +634,7 @@ export default function TerminalView() {
             </strong>
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 2 }}>
-            Zurück zum Start in wenigen Sekunden...
+            {t('terminalView.backToStart')}
           </Typography>
         </Box>
       </TerminalWrapper>
