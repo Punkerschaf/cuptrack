@@ -18,6 +18,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BackspaceIcon from '@mui/icons-material/Backspace';
 import SearchIcon from '@mui/icons-material/Search';
+import NfcIcon from '@mui/icons-material/Nfc';
 import { api } from '../../api';
 import type { TerminalInfo } from '../../types';
 
@@ -47,6 +48,10 @@ export default function TerminalView() {
   const [balance, setBalance] = useState(0);
   const [newBalance, setNewBalance] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [nfcScanning, setNfcScanning] = useState(false);
+  const [nfcStatus, setNfcStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
+  const [nfcError, setNfcError] = useState('');
+  const [nfcSupported] = useState(() => 'NDEFReader' in window);
 
   const loadInfo = useCallback(() => {
     if (!terminalName) return;
@@ -72,8 +77,68 @@ export default function TerminalView() {
     setBalance(0);
     setNewBalance('');
     setUserSearch('');
+    setNfcScanning(false);
+    setNfcStatus('idle');
+    setNfcError('');
     loadInfo();
   }, [loadInfo]);
+
+  const handleNfcScan = useCallback(async () => {
+    if (!terminalName || !nfcSupported) return;
+    setNfcScanning(true);
+    setNfcStatus('scanning');
+    setNfcError('');
+
+    try {
+      const ndef = new (window as any).NDEFReader();
+      const abortController = new AbortController();
+
+      await ndef.scan({ signal: abortController.signal });
+
+      ndef.addEventListener('reading', async (event: any) => {
+        abortController.abort();
+        const serialNumber: string = event.serialNumber || '';
+        if (!serialNumber) {
+          setNfcStatus('error');
+          setNfcError('Keine Seriennummer auf dem NFC-Tag gefunden');
+          setNfcScanning(false);
+          setTimeout(() => setNfcStatus('idle'), 3000);
+          return;
+        }
+
+        try {
+          const res = await api.verifyNfc(terminalName, serialNumber);
+          setNfcStatus('success');
+          setSelectedUserId(res.user.id);
+          setSelectedUserName(res.user.displayName);
+          setSessionToken(res.sessionToken);
+          setBalance(res.user.balance);
+          setNfcScanning(false);
+          setTimeout(() => setStep('menu'), 600);
+        } catch {
+          setNfcStatus('error');
+          setNfcError('Kein Benutzer mit dieser NFC-Karte gefunden');
+          setNfcScanning(false);
+          setTimeout(() => { setNfcStatus('idle'); setNfcError(''); }, 3000);
+        }
+      }, { once: true });
+
+      // Auto-cancel after 30s
+      setTimeout(() => {
+        abortController.abort();
+        setNfcScanning(false);
+        if (nfcStatus === 'scanning') {
+          setNfcStatus('idle');
+          setNfcError('');
+        }
+      }, 30000);
+    } catch (e: unknown) {
+      setNfcScanning(false);
+      setNfcStatus('error');
+      setNfcError(e instanceof Error ? e.message : 'NFC-Fehler');
+      setTimeout(() => { setNfcStatus('idle'); setNfcError(''); }, 3000);
+    }
+  }, [terminalName, nfcSupported, nfcStatus]);
 
   // Auto-redirect after confirmation screens
   useEffect(() => {
@@ -184,6 +249,40 @@ export default function TerminalView() {
         <Typography variant="h6" gutterBottom sx={{ textAlign: 'center' }}>
           Wähle deinen Namen:
         </Typography>
+
+        {nfcSupported && (
+          <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <Button
+              variant={nfcScanning ? 'outlined' : 'contained'}
+              startIcon={<NfcIcon />}
+              onClick={nfcScanning ? undefined : handleNfcScan}
+              disabled={nfcScanning}
+              sx={{
+                py: 1.5,
+                px: 4,
+                fontSize: '1.1rem',
+                backgroundColor: nfcStatus === 'success' ? '#4CAF50'
+                  : nfcStatus === 'error' ? '#F44336'
+                  : nfcScanning ? undefined : '#6F4E37',
+                color: nfcScanning ? undefined : 'white',
+                '&:hover': { backgroundColor: nfcScanning ? undefined : '#4E3524' },
+                animation: nfcScanning ? 'pulse 1.5s infinite' : 'none',
+                '@keyframes pulse': {
+                  '0%': { opacity: 1 },
+                  '50%': { opacity: 0.6 },
+                  '100%': { opacity: 1 },
+                },
+              }}
+            >
+              {nfcScanning ? 'NFC-Karte jetzt auflegen...' : 'Mit NFC-Karte anmelden'}
+            </Button>
+            {nfcError && (
+              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                {nfcError}
+              </Typography>
+            )}
+          </Box>
+        )}
 
         {info.users.length > 8 && (
           <TextField

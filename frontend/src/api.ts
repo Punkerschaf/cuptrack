@@ -93,6 +93,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ userId, pin }),
     }),
+  verifyNfc: (slug: string, serialNumber: string) =>
+    request<{
+      success: boolean;
+      sessionToken: string;
+      user: { id: string; displayName: string; balance: number };
+    }>(`/terminal-actions/${encodeURIComponent(slug)}/verify-nfc`, {
+      method: 'POST',
+      body: JSON.stringify({ serialNumber }),
+    }),
   countCoffee: (slug: string, sessionToken: string) =>
     request<{ success: boolean; newBalance: number }>(
       `/terminal-actions/${encodeURIComponent(slug)}/count-coffee`,
