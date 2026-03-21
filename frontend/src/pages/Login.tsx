@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -15,6 +15,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import LocalCafeIcon from '@mui/icons-material/LocalCafe';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { api } from '../api';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -23,8 +24,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [versionInfo, setVersionInfo] = useState<{ version: string; codeName: string } | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.getVersion().then((v) => setVersionInfo({ version: v.version, codeName: v.codeName })).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,6 +122,14 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
+      {versionInfo && (
+        <Typography
+          variant="caption"
+          sx={{ mt: 2, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}
+        >
+          CupTrack v{versionInfo.version} &mdash; {versionInfo.codeName}
+        </Typography>
+      )}
     </Box>
   );
 }

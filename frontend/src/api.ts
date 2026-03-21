@@ -113,6 +113,10 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ sessionToken, amount }) },
     ),
 
+  // Version / Health
+  getVersion: () =>
+    request<{ status: string; version: string; codeName: string }>('/health'),
+
   // Stats
   getDashboardStats: () => request<DashboardStats>('/stats/dashboard'),
 

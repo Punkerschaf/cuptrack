@@ -54,6 +54,11 @@ export default function TerminalView() {
   const [nfcStatus, setNfcStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
   const [nfcError, setNfcError] = useState('');
   const [nfcSupported] = useState(() => 'NDEFReader' in window);
+  const [codeName, setCodeName] = useState('');
+
+  useEffect(() => {
+    api.getVersion().then((v) => setCodeName(v.codeName)).catch(() => {});
+  }, []);
 
   const loadInfo = useCallback(() => {
     if (!terminalName) return;
@@ -213,14 +218,14 @@ export default function TerminalView() {
 
   if (loading)
     return (
-      <CenteredBox>
+      <CenteredBox codeName={codeName}>
         <CircularProgress />
       </CenteredBox>
     );
 
   if (error || !info)
     return (
-      <CenteredBox>
+      <CenteredBox codeName={codeName}>
         <Alert severity="error" sx={{ maxWidth: 400 }}>
           {error || t('terminalView.terminalNotFound')}
         </Alert>
@@ -234,7 +239,7 @@ export default function TerminalView() {
     );
 
     return (
-      <TerminalWrapper>
+      <TerminalWrapper codeName={codeName}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <LocalCafeIcon sx={{ fontSize: 48, color: '#6F4E37' }} />
           <Typography variant="h4" fontWeight={700} color="#6F4E37">
@@ -348,7 +353,7 @@ export default function TerminalView() {
           : 'transparent';
 
     return (
-      <TerminalWrapper>
+      <TerminalWrapper codeName={codeName}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={resetToHome}
@@ -449,7 +454,7 @@ export default function TerminalView() {
   // ─── Menu: Coffee / Balance / Cancel ───
   if (step === 'menu') {
     return (
-      <TerminalWrapper>
+      <TerminalWrapper codeName={codeName}>
         <Typography variant="h5" textAlign="center" gutterBottom
           dangerouslySetInnerHTML={{ __html: t('terminalView.greeting', { name: selectedUserName }) }}
         />
@@ -535,7 +540,7 @@ export default function TerminalView() {
   // ─── Coffee Counted Confirmation ───
   if (step === 'counting') {
     return (
-      <TerminalWrapper>
+      <TerminalWrapper codeName={codeName}>
         <Box sx={{ textAlign: 'center' }}>
           <LocalCafeIcon sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
           <Typography variant="h4" fontWeight={700} color="success.main">
@@ -562,7 +567,7 @@ export default function TerminalView() {
   // ─── Edit Balance ───
   if (step === 'editBalance') {
     return (
-      <TerminalWrapper>
+      <TerminalWrapper codeName={codeName}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => setStep('menu')}
@@ -615,7 +620,7 @@ export default function TerminalView() {
   // ─── Balance Updated Confirmation ───
   if (step === 'balanceUpdated') {
     return (
-      <TerminalWrapper>
+      <TerminalWrapper codeName={codeName}>
         <Box sx={{ textAlign: 'center' }}>
           <AccountBalanceWalletIcon
             sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }}
@@ -646,33 +651,43 @@ export default function TerminalView() {
 
 /* ─── Layout Helpers ─── */
 
-function CenteredBox({ children }: { children: React.ReactNode }) {
+function CenteredBox({ children, codeName }: { children: React.ReactNode; codeName?: string }) {
   return (
     <Box
       sx={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#FAF6F1',
       }}
     >
-      {children}
+      <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {children}
+      </Box>
+      {codeName && (
+        <Typography variant="caption" color="text.secondary" sx={{ pb: 2 }}>
+          CupTrack &mdash; {codeName}
+        </Typography>
+      )}
     </Box>
   );
 }
 
-function TerminalWrapper({ children }: { children: React.ReactNode }) {
+function TerminalWrapper({ children, codeName }: { children: React.ReactNode; codeName?: string }) {
   return (
     <Box
       sx={{
         minHeight: '100vh',
         backgroundColor: '#FAF6F1',
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
         pt: { xs: 2, sm: 4 },
         px: 2,
+        pb: 2,
       }}
     >
       <Paper
@@ -682,10 +697,16 @@ function TerminalWrapper({ children }: { children: React.ReactNode }) {
           width: '100%',
           p: { xs: 2, sm: 4 },
           borderRadius: 3,
+          flex: 1,
         }}
       >
         {children}
       </Paper>
+      {codeName && (
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
+          CupTrack &mdash; {codeName}
+        </Typography>
+      )}
     </Box>
   );
 }

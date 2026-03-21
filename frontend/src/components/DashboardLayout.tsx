@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -38,9 +38,14 @@ export default function DashboardLayout() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = useState(!isMobile);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [versionInfo, setVersionInfo] = useState<{ version: string; codeName: string } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    api.getVersion().then((v) => setVersionInfo({ version: v.version, codeName: v.codeName })).catch(() => {});
+  }, []);
 
   const menuItems = [
     { text: t('nav.dashboard'), icon: <DashboardIcon />, path: '/dashboard' },
@@ -238,6 +243,8 @@ export default function DashboardLayout() {
           }),
           backgroundColor: 'background.default',
           minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {user && (
@@ -254,6 +261,13 @@ export default function DashboardLayout() {
           </Box>
         )}
         <Outlet />
+        {versionInfo && (
+          <Box sx={{ textAlign: 'center', mt: 'auto', pt: 4, pb: 2 }}>
+            <Typography variant="caption" color="text.secondary">
+              CupTrack v{versionInfo.version} &mdash; {versionInfo.codeName}
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );
