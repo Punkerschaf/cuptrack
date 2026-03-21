@@ -13,7 +13,7 @@ export interface User {
 
 export interface Identifier {
   id: string;
-  type: 'pin' | 'rfid' | 'nfc' | 'qr';
+  type: 'pin' | 'rfid' | 'nfc' | 'qr' | 'kaba_nfc';
   value: string;
 }
 

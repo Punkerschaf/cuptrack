@@ -14,7 +14,7 @@ router.get('/:slug', (req, res) => {
   const machine = db.data.machines.find(m => m.id === terminal.machineId);
 
   const users = db.data.users
-    .filter(u => u.type === 'drinker' && u.identifiers.some(i => i.type === 'pin'))
+    .filter(u => u.type === 'drinker' && u.identifiers.some(i => i.type === 'pin' || i.type === 'kaba_nfc'))
     .map(u => ({ id: u.id, displayName: u.displayName }));
 
   res.json({
@@ -23,6 +23,38 @@ router.get('/:slug', (req, res) => {
       ? { id: machine.id, name: machine.name, room: machine.room, pricePerCoffee: machine.pricePerCoffee }
       : null,
     users,
+  });
+});
+
+// Verify NFC serial number → returns short-lived session token (no PIN needed)
+router.post('/:slug/verify-nfc', (req, res) => {
+  const { serialNumber } = req.body;
+  if (!serialNumber || typeof serialNumber !== 'string') {
+    return res.status(400).json({ error: 'Seriennummer erforderlich' });
+  }
+
+  const terminal = db.data.terminals.find(t => t.slug === req.params.slug);
+  if (!terminal) return res.status(404).json({ error: 'Terminal nicht gefunden' });
+
+  // Normalize: lowercase, trimmed
+  const normalized = serialNumber.toLowerCase().trim();
+
+  const user = db.data.users.find(
+    u => u.type === 'drinker' &&
+      u.identifiers.some(i => i.type === 'kaba_nfc' && i.value.toLowerCase().trim() === normalized),
+  );
+  if (!user) return res.status(404).json({ error: 'Kein Benutzer mit dieser NFC-Seriennummer gefunden' });
+
+  const sessionToken = jwt.sign(
+    { userId: user.id, terminalId: terminal.id, purpose: 'terminal-session' },
+    config.jwtSecret,
+    { expiresIn: '5m' },
+  );
+
+  res.json({
+    success: true,
+    sessionToken,
+    user: { id: user.id, displayName: user.displayName, balance: user.balance },
   });
 });
 

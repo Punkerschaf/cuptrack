@@ -540,11 +540,12 @@ function EditUserDialog({
                 key={ident.id}
                 sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}
               >
-                <Chip label={ident.type.toUpperCase()} size="small" />
+                <Chip label={ident.type === 'kaba_nfc' ? 'KABA NFC (SN#)' : ident.type.toUpperCase()} size="small" />
                 <TextField
                   size="small"
                   value={ident.value}
                   onChange={(e) => updateIdentifier(idx, e.target.value)}
+                  placeholder={ident.type === 'kaba_nfc' ? '01:23:45:67:89:AB:CD' : ''}
                   sx={{ flex: 1 }}
                 />
                 <IconButton
@@ -556,7 +557,7 @@ function EditUserDialog({
                 </IconButton>
               </Box>
             ))}
-            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
               <Button size="small" onClick={() => addIdentifier('pin')}>
                 + PIN
               </Button>
@@ -565,6 +566,9 @@ function EditUserDialog({
               </Button>
               <Button size="small" onClick={() => addIdentifier('nfc')}>
                 + NFC
+              </Button>
+              <Button size="small" onClick={() => addIdentifier('kaba_nfc')}>
+                + KABA NFC (SN#)
               </Button>
               <Button size="small" onClick={() => addIdentifier('qr')}>
                 + QR
