@@ -115,4 +115,12 @@ export const api = {
 
   // Stats
   getDashboardStats: () => request<DashboardStats>('/stats/dashboard'),
+
+  // Settings
+  getSettings: () => request<{ language: string }>('/settings'),
+  updateSettings: (data: { language: string }) =>
+    request<{ language: string }>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };

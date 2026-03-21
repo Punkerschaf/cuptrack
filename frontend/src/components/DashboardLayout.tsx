@@ -14,6 +14,8 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  MenuItem,
+  Select,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -21,24 +23,17 @@ import PeopleIcon from '@mui/icons-material/People';
 import CoffeeMakerIcon from '@mui/icons-material/CoffeeMaker';
 import TabletIcon from '@mui/icons-material/Tablet';
 import LogoutIcon from '@mui/icons-material/Logout';
+import LanguageIcon from '@mui/icons-material/Language';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../api';
 
 const DRAWER_WIDTH = 240;
 const DRAWER_WIDTH_COLLAPSED = 64;
 
-const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-  { text: 'Benutzer', icon: <PeopleIcon />, path: '/dashboard/users' },
-  {
-    text: 'Maschinen',
-    icon: <CoffeeMakerIcon />,
-    path: '/dashboard/machines',
-  },
-  { text: 'Terminals', icon: <TabletIcon />, path: '/dashboard/terminals' },
-];
-
 export default function DashboardLayout() {
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = useState(!isMobile);
@@ -47,9 +42,29 @@ export default function DashboardLayout() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
+  const menuItems = [
+    { text: t('nav.dashboard'), icon: <DashboardIcon />, path: '/dashboard' },
+    { text: t('nav.users'), icon: <PeopleIcon />, path: '/dashboard/users' },
+    {
+      text: t('nav.machines'),
+      icon: <CoffeeMakerIcon />,
+      path: '/dashboard/machines',
+    },
+    { text: t('nav.terminals'), icon: <TabletIcon />, path: '/dashboard/terminals' },
+  ];
+
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleLanguageChange = async (lang: string) => {
+    try {
+      await api.updateSettings({ language: lang });
+      i18n.changeLanguage(lang);
+    } catch {
+      // silently fail
+    }
   };
 
   const drawerContent = (
@@ -108,6 +123,32 @@ export default function DashboardLayout() {
         ))}
       </List>
       <Divider />
+      {/* Language Selector */}
+      {open && (
+        <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <LanguageIcon fontSize="small" color="action" />
+          <Select
+            size="small"
+            value={i18n.language}
+            onChange={(e) => handleLanguageChange(e.target.value)}
+            sx={{ flex: 1, fontSize: '0.875rem' }}
+          >
+            <MenuItem value="de">{t('settings.german')}</MenuItem>
+            <MenuItem value="en">{t('settings.english')}</MenuItem>
+          </Select>
+        </Box>
+      )}
+      {!open && (
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <IconButton
+            size="small"
+            onClick={() => handleLanguageChange(i18n.language === 'de' ? 'en' : 'de')}
+          >
+            <LanguageIcon />
+          </IconButton>
+        </Box>
+      )}
+      <Divider />
       <List>
         <ListItemButton
           onClick={handleLogout}
@@ -124,7 +165,7 @@ export default function DashboardLayout() {
           >
             <LogoutIcon />
           </ListItemIcon>
-          {open && <ListItemText primary="Abmelden" />}
+          {open && <ListItemText primary={t('auth.logout')} />}
         </ListItemButton>
       </List>
     </Box>
@@ -207,9 +248,9 @@ export default function DashboardLayout() {
               mb: 2,
             }}
           >
-            <Typography variant="body2" color="text.secondary">
-              Angemeldet als <strong>{user.displayName}</strong>
-            </Typography>
+            <Typography variant="body2" color="text.secondary"
+              dangerouslySetInnerHTML={{ __html: t('auth.loggedInAs', { name: user.displayName }) }}
+            />
           </Box>
         )}
         <Outlet />

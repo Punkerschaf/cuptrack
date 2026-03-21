@@ -11,6 +11,7 @@ import machineRoutes from './routes/machines.js';
 import terminalRoutes from './routes/terminals.js';
 import terminalActionRoutes from './routes/terminalActions.js';
 import statsRoutes from './routes/stats.js';
+import settingsRoutes from './routes/settings.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const version = JSON.parse(
@@ -37,6 +38,7 @@ app.use('/api/machines', machineRoutes);
 app.use('/api/terminals', terminalRoutes);
 app.use('/api/terminal-actions', terminalActionRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Serve frontend build in production
 const frontendDist = join(__dirname, '..', '..', 'frontend', 'dist');

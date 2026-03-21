@@ -13,8 +13,10 @@
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^5.16.0",
     "@mui/material": "^5.16.0",
+    "i18next": "^25.10.2",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "react-i18next": "^16.6.0",
     "react-router-dom": "^6.26.0",
     "recharts": "^2.12.0"
   },

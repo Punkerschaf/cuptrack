@@ -14,8 +14,10 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import LocalCafeIcon from '@mui/icons-material/LocalCafe';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +35,7 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen',
+        err instanceof Error ? err.message : t('auth.loginFailed'),
       );
     } finally {
       setLoading(false);
@@ -57,10 +59,10 @@ export default function Login() {
               sx={{ fontSize: 48, color: 'primary.main', mb: 1 }}
             />
             <Typography variant="h4" fontWeight={700} color="primary.main">
-              CupTrack
+              {t('auth.appName')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Admin Dashboard
+              {t('auth.adminDashboard')}
             </Typography>
           </Box>
 
@@ -73,7 +75,7 @@ export default function Login() {
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Benutzername"
+              label={t('auth.username')}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               margin="normal"
@@ -82,7 +84,7 @@ export default function Login() {
             />
             <TextField
               fullWidth
-              label="Passwort"
+              label={t('auth.password')}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -109,7 +111,7 @@ export default function Login() {
               disabled={loading}
               sx={{ mt: 3 }}
             >
-              {loading ? 'Anmelden...' : 'Anmelden'}
+              {loading ? t('auth.loggingIn') : t('auth.login')}
             </Button>
           </form>
         </CardContent>
