@@ -98,6 +98,9 @@ dist
 # Sveltekit cache directory
 .svelte-kit/
 
+# CupTrack runtime data
+backend/data/
+
 # vitepress build output
 **/.vitepress/dist
 
