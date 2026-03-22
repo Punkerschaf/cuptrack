@@ -19,6 +19,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BackspaceIcon from '@mui/icons-material/Backspace';
 import SearchIcon from '@mui/icons-material/Search';
 import NfcIcon from '@mui/icons-material/Nfc';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api';
 import type { TerminalInfo } from '../../types';
@@ -55,9 +56,23 @@ export default function TerminalView() {
   const [nfcError, setNfcError] = useState('');
   const [nfcSupported] = useState(() => 'NDEFReader' in window);
   const [codeName, setCodeName] = useState('');
+  const [connected, setConnected] = useState(true);
 
   useEffect(() => {
     api.getVersion().then((v) => setCodeName(v.codeName)).catch(() => {});
+  }, []);
+
+  // Connection polling
+  useEffect(() => {
+    let active = true;
+    const check = () => {
+      api.getVersion()
+        .then(() => { if (active) setConnected(true); })
+        .catch(() => { if (active) setConnected(false); });
+    };
+    check();
+    const interval = setInterval(check, 15000);
+    return () => { active = false; clearInterval(interval); };
   }, []);
 
   const loadInfo = useCallback(() => {
@@ -235,14 +250,14 @@ export default function TerminalView() {
 
   if (loading)
     return (
-      <CenteredBox codeName={codeName}>
+      <CenteredBox codeName={codeName} connected={connected}>
         <CircularProgress />
       </CenteredBox>
     );
 
   if (error || !info)
     return (
-      <CenteredBox codeName={codeName}>
+      <CenteredBox codeName={codeName} connected={connected}>
         <Alert severity="error" sx={{ maxWidth: 400 }}>
           {error || t('terminalView.terminalNotFound')}
         </Alert>
@@ -256,17 +271,20 @@ export default function TerminalView() {
     );
 
     return (
-      <TerminalWrapper codeName={codeName}>
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <LocalCafeIcon sx={{ fontSize: 48, color: '#6F4E37' }} />
-          <Typography variant="h4" fontWeight={700} color="#6F4E37">
-            {info.terminal.name}
-          </Typography>
           {info.machine && (
-            <Typography color="text.secondary">
-              {info.machine.name}
-              {info.machine.room ? ` — ${info.machine.room}` : ''}
-            </Typography>
+            <>
+              <Typography variant="h4" fontWeight={700} color="#6F4E37">
+                {info.machine.name}
+              </Typography>
+              {info.machine.room && (
+                <Typography variant="h6" color="text.secondary">
+                  {info.machine.room}
+                </Typography>
+              )}
+            </>
           )}
         </Box>
 
@@ -370,7 +388,7 @@ export default function TerminalView() {
           : 'transparent';
 
     return (
-      <TerminalWrapper codeName={codeName}>
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={resetToHome}
@@ -471,7 +489,7 @@ export default function TerminalView() {
   // ─── Menu: Coffee / Balance / Cancel ───
   if (step === 'menu') {
     return (
-      <TerminalWrapper codeName={codeName}>
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
         <Typography variant="h5" textAlign="center" gutterBottom
           dangerouslySetInnerHTML={{ __html: t('terminalView.greeting', { name: selectedUserName }) }}
         />
@@ -557,7 +575,7 @@ export default function TerminalView() {
   // ─── Coffee Counted Confirmation ───
   if (step === 'counting') {
     return (
-      <TerminalWrapper codeName={codeName}>
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
         <Box sx={{ textAlign: 'center' }}>
           <LocalCafeIcon sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
           <Typography variant="h4" fontWeight={700} color="success.main">
@@ -587,7 +605,7 @@ export default function TerminalView() {
     const addAmount = parseFloat(newBalance);
 
     return (
-      <TerminalWrapper codeName={codeName}>
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => setStep('menu')}
@@ -701,7 +719,7 @@ export default function TerminalView() {
   // ─── Balance Updated Confirmation ───
   if (step === 'balanceUpdated') {
     return (
-      <TerminalWrapper codeName={codeName}>
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
         <Box sx={{ textAlign: 'center' }}>
           <AccountBalanceWalletIcon
             sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }}
@@ -732,7 +750,29 @@ export default function TerminalView() {
 
 /* ─── Layout Helpers ─── */
 
-function CenteredBox({ children, codeName }: { children: React.ReactNode; codeName?: string }) {
+function ConnectionIndicator({ connected }: { connected: boolean }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      <FiberManualRecordIcon
+        sx={{
+          fontSize: 10,
+          color: connected ? '#4CAF50' : '#F44336',
+          animation: connected ? 'none' : 'blink 1.5s infinite',
+          '@keyframes blink': {
+            '0%': { opacity: 1 },
+            '50%': { opacity: 0.3 },
+            '100%': { opacity: 1 },
+          },
+        }}
+      />
+      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+        {connected ? 'Verbunden' : 'Keine Verbindung'}
+      </Typography>
+    </Box>
+  );
+}
+
+function CenteredBox({ children, codeName, connected = true }: { children: React.ReactNode; codeName?: string; connected?: boolean }) {
   return (
     <Box
       sx={{
@@ -747,16 +787,19 @@ function CenteredBox({ children, codeName }: { children: React.ReactNode; codeNa
       <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {children}
       </Box>
-      {codeName && (
-        <Typography variant="caption" color="text.secondary" sx={{ pb: 2 }}>
-          CupTrack &mdash; {codeName}
-        </Typography>
-      )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, pb: 2 }}>
+        <ConnectionIndicator connected={connected} />
+        {codeName && (
+          <Typography variant="caption" color="text.secondary">
+            CupTrack &mdash; {codeName}
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 }
 
-function TerminalWrapper({ children, codeName }: { children: React.ReactNode; codeName?: string }) {
+function TerminalWrapper({ children, codeName, terminalName, connected = true }: { children: React.ReactNode; codeName?: string; terminalName?: string; connected?: boolean }) {
   return (
     <Box
       sx={{
@@ -783,11 +826,19 @@ function TerminalWrapper({ children, codeName }: { children: React.ReactNode; co
       >
         {children}
       </Paper>
-      {codeName && (
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
-          CupTrack &mdash; {codeName}
-        </Typography>
-      )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, mt: 2 }}>
+        <ConnectionIndicator connected={connected} />
+        {terminalName && (
+          <Typography variant="caption" color="text.secondary">
+            {terminalName}
+          </Typography>
+        )}
+        {codeName && (
+          <Typography variant="caption" color="text.secondary">
+            CupTrack &mdash; {codeName}
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 }
