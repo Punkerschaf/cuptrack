@@ -53,6 +53,7 @@ export default function Login() {
       sx={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #6F4E37 0%, #3E2723 100%)',
