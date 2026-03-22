@@ -30,6 +30,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import SearchIcon from '@mui/icons-material/Search';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import type { Machine, LogEntry } from '../types';
 
@@ -37,6 +38,7 @@ type SortKey = 'name' | 'room' | 'pricePerCoffee';
 type SortDir = 'asc' | 'desc';
 
 export default function Machines() {
+  const { t } = useTranslation();
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -120,14 +122,14 @@ export default function Machines() {
         }}
       >
         <Typography variant="h4" fontWeight={700}>
-          Maschinenverwaltung
+          {t('machines.title')}
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateOpen(true)}
         >
-          Neue Maschine
+          {t('machines.newMachine')}
         </Button>
       </Box>
 
@@ -139,7 +141,7 @@ export default function Machines() {
 
       <TextField
         size="small"
-        placeholder="Suchen..."
+        placeholder={t('common.search')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         InputProps={{
@@ -162,7 +164,7 @@ export default function Machines() {
                   direction={sortKey === 'name' ? sortDir : 'asc'}
                   onClick={() => handleSort('name')}
                 >
-                  Name
+                  {t('common.name')}
                 </TableSortLabel>
               </TableCell>
               <TableCell>
@@ -171,7 +173,7 @@ export default function Machines() {
                   direction={sortKey === 'room' ? sortDir : 'asc'}
                   onClick={() => handleSort('room')}
                 >
-                  Raum
+                  {t('machines.room')}
                 </TableSortLabel>
               </TableCell>
               <TableCell align="right">
@@ -180,10 +182,10 @@ export default function Machines() {
                   direction={sortKey === 'pricePerCoffee' ? sortDir : 'asc'}
                   onClick={() => handleSort('pricePerCoffee')}
                 >
-                  Preis / Kaffee
+                  {t('machines.pricePerCoffee')}
                 </TableSortLabel>
               </TableCell>
-              <TableCell align="right">Aktionen</TableCell>
+              <TableCell align="right">{t('common.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -195,12 +197,12 @@ export default function Machines() {
                   {m.pricePerCoffee.toFixed(2)} €
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Info">
+                  <Tooltip title={t('common.info')}>
                     <IconButton size="small" onClick={() => openInfo(m)}>
                       <InfoIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Bearbeiten">
+                  <Tooltip title={t('common.edit')}>
                     <IconButton
                       size="small"
                       onClick={() => setEditMachine(m)}
@@ -214,7 +216,7 @@ export default function Machines() {
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} align="center">
-                  Keine Maschinen gefunden
+                  {t('machines.noMachines')}
                 </TableCell>
               </TableRow>
             )}
@@ -266,6 +268,8 @@ function CreateMachineDialog({
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const { t } = useTranslation();
+
   const handleSave = async () => {
     setError('');
     setSaving(true);
@@ -279,7 +283,7 @@ function CreateMachineDialog({
       onClose();
       setForm({ name: '', room: '', pricePerCoffee: '0.50' });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -287,7 +291,7 @@ function CreateMachineDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Neue Maschine</DialogTitle>
+      <DialogTitle>{t('machines.createTitle')}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -296,7 +300,7 @@ function CreateMachineDialog({
         )}
         <TextField
           fullWidth
-          label="Name"
+          label={t('common.name')}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           margin="dense"
@@ -304,14 +308,14 @@ function CreateMachineDialog({
         />
         <TextField
           fullWidth
-          label="Raum"
+          label={t('machines.room')}
           value={form.room}
           onChange={(e) => setForm({ ...form, room: e.target.value })}
           margin="dense"
         />
         <TextField
           fullWidth
-          label="Preis pro Kaffee (€)"
+          label={t('machines.priceLabel')}
           type="number"
           inputProps={{ step: '0.01', min: '0' }}
           value={form.pricePerCoffee}
@@ -323,9 +327,9 @@ function CreateMachineDialog({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button variant="contained" onClick={handleSave} disabled={saving}>
-          Erstellen
+          {t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -351,6 +355,7 @@ function EditMachineDialog({
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { t } = useTranslation();
 
   const handleSave = async () => {
     setError('');
@@ -364,7 +369,7 @@ function EditMachineDialog({
       onUpdated();
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -376,14 +381,14 @@ function EditMachineDialog({
       onUpdated();
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
       setConfirmDelete(false);
     }
   };
 
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Maschine bearbeiten: {machine.name}</DialogTitle>
+      <DialogTitle>{t('machines.editTitle', { name: machine.name })}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -392,21 +397,21 @@ function EditMachineDialog({
         )}
         <TextField
           fullWidth
-          label="Name"
+          label={t('common.name')}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           margin="dense"
         />
         <TextField
           fullWidth
-          label="Raum"
+          label={t('machines.room')}
           value={form.room}
           onChange={(e) => setForm({ ...form, room: e.target.value })}
           margin="dense"
         />
         <TextField
           fullWidth
-          label="Preis pro Kaffee (€)"
+          label={t('machines.priceLabel')}
           type="number"
           inputProps={{ step: '0.01', min: '0' }}
           value={form.pricePerCoffee}
@@ -420,26 +425,26 @@ function EditMachineDialog({
         <Box>
           {!confirmDelete ? (
             <Button color="error" onClick={() => setConfirmDelete(true)}>
-              Löschen
+              {t('common.delete')}
             </Button>
           ) : (
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <Typography variant="body2" color="error">
-                Wirklich löschen?
+                {t('common.confirmDelete')}
               </Typography>
               <Button color="error" variant="contained" size="small" onClick={handleDelete}>
-                Ja
+                {t('common.yes')}
               </Button>
               <Button size="small" onClick={() => setConfirmDelete(false)}>
-                Nein
+                {t('common.no')}
               </Button>
             </Box>
           )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button onClick={onClose}>Abbrechen</Button>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            Speichern
+            {t('common.save')}
           </Button>
         </Box>
       </DialogActions>
@@ -448,11 +453,6 @@ function EditMachineDialog({
 }
 
 /* ─── Info ─── */
-
-const LOG_LABELS: Record<string, string> = {
-  coffee: 'Kaffee gezählt',
-  balance: 'Guthaben geändert',
-};
 
 function MachineInfoDialog({
   machine,
@@ -465,37 +465,43 @@ function MachineInfoDialog({
   loading: boolean;
   onClose: () => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const LOG_LABELS: Record<string, string> = {
+    coffee: t('logs.coffee'),
+    balance: t('logs.balance'),
+  };
+
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Info: {machine.name}</DialogTitle>
+      <DialogTitle>{t('machines.infoTitle', { name: machine.name })}</DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Raum
+            {t('machines.room')}
           </Typography>
           <Typography>{machine.room || '—'}</Typography>
         </Box>
         <Box sx={{ mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Preis / Kaffee
+            {t('machines.pricePerCoffee')}
           </Typography>
           <Typography>{machine.pricePerCoffee.toFixed(2)} €</Typography>
         </Box>
         <Divider sx={{ my: 2 }} />
         <Typography variant="h6" gutterBottom>
-          Aktivitätslog
+          {t('common.activityLog')}
         </Typography>
         {loading ? (
           <CircularProgress size={24} />
         ) : logs.length === 0 ? (
-          <Typography color="text.secondary">Keine Einträge</Typography>
+          <Typography color="text.secondary">{t('common.noEntries')}</Typography>
         ) : (
           <List dense sx={{ maxHeight: 300, overflow: 'auto' }}>
             {logs.slice(0, 50).map((log) => (
               <ListItem key={log.id}>
                 <ListItemText
                   primary={LOG_LABELS[log.type] || log.type}
-                  secondary={new Date(log.createdAt).toLocaleString('de-DE')}
+                  secondary={new Date(log.createdAt).toLocaleString(i18n.language === 'de' ? 'de-DE' : 'en-US')}
                 />
               </ListItem>
             ))}
@@ -503,7 +509,7 @@ function MachineInfoDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Schließen</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

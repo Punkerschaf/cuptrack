@@ -54,6 +54,7 @@ router.post('/', async (req, res) => {
     slug,
     machineId,
     type: 'web',
+    quickButtons: { enabled: false, button1: 5, button2: 10 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -67,7 +68,14 @@ router.put('/:id', async (req, res) => {
   const terminal = db.data.terminals.find(t => t.id === req.params.id);
   if (!terminal) return res.status(404).json({ error: 'Terminal nicht gefunden' });
 
-  const { name, machineId } = req.body;
+  const { name, machineId, quickButtons } = req.body;
+  if (quickButtons !== undefined) {
+    terminal.quickButtons = {
+      enabled: !!quickButtons.enabled,
+      button1: parseFloat(quickButtons.button1) || 5,
+      button2: parseFloat(quickButtons.button2) || 10,
+    };
+  }
   if (name !== undefined) {
     const slug = name
       .toLowerCase()

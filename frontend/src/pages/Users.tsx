@@ -34,6 +34,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import type { User, LogEntry, Identifier } from '../types';
 
@@ -53,6 +54,7 @@ const TYPE_COLORS: Record<string, 'primary' | 'secondary' | 'default'> = {
 };
 
 export default function Users() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -142,14 +144,14 @@ export default function Users() {
         }}
       >
         <Typography variant="h4" fontWeight={700}>
-          Benutzerverwaltung
+          {t('users.title')}
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateOpen(true)}
         >
-          Neuer Benutzer
+          {t('users.newUser')}
         </Button>
       </Box>
 
@@ -163,7 +165,7 @@ export default function Users() {
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <TextField
           size="small"
-          placeholder="Suchen..."
+          placeholder={t('common.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -178,15 +180,15 @@ export default function Users() {
         <TextField
           size="small"
           select
-          label="Typ"
+          label={t('common.type')}
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
           sx={{ minWidth: 150 }}
         >
-          <MenuItem value="">Alle</MenuItem>
-          <MenuItem value="admin">Admin</MenuItem>
-          <MenuItem value="api">API-User</MenuItem>
-          <MenuItem value="drinker">Drinker</MenuItem>
+          <MenuItem value="">{t('common.all')}</MenuItem>
+          <MenuItem value="admin">{t('users.typeAdmin')}</MenuItem>
+          <MenuItem value="api">{t('users.typeApi')}</MenuItem>
+          <MenuItem value="drinker">{t('users.typeDrinker')}</MenuItem>
         </TextField>
       </Box>
 
@@ -201,7 +203,7 @@ export default function Users() {
                   direction={sortKey === 'displayName' ? sortDir : 'asc'}
                   onClick={() => handleSort('displayName')}
                 >
-                  Name
+                  {t('common.name')}
                 </TableSortLabel>
               </TableCell>
               <TableCell>
@@ -210,7 +212,7 @@ export default function Users() {
                   direction={sortKey === 'username' ? sortDir : 'asc'}
                   onClick={() => handleSort('username')}
                 >
-                  Benutzername
+                  {t('auth.username')}
                 </TableSortLabel>
               </TableCell>
               <TableCell>
@@ -219,7 +221,7 @@ export default function Users() {
                   direction={sortKey === 'type' ? sortDir : 'asc'}
                   onClick={() => handleSort('type')}
                 >
-                  Typ
+                  {t('common.type')}
                 </TableSortLabel>
               </TableCell>
               <TableCell align="right">
@@ -228,10 +230,10 @@ export default function Users() {
                   direction={sortKey === 'balance' ? sortDir : 'asc'}
                   onClick={() => handleSort('balance')}
                 >
-                  Guthaben
+                  {t('users.balance')}
                 </TableSortLabel>
               </TableCell>
-              <TableCell align="right">Aktionen</TableCell>
+              <TableCell align="right">{t('common.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -257,7 +259,7 @@ export default function Users() {
                     : '—'}
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Info">
+                  <Tooltip title={t('common.info')}>
                     <IconButton
                       size="small"
                       onClick={() => openInfo(user)}
@@ -266,7 +268,7 @@ export default function Users() {
                     </IconButton>
                   </Tooltip>
                   {!user.isRoot && (
-                    <Tooltip title="Bearbeiten">
+                    <Tooltip title={t('common.edit')}>
                       <IconButton
                         size="small"
                         onClick={() => setEditUser(user)}
@@ -281,7 +283,7 @@ export default function Users() {
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  Keine Benutzer gefunden
+                  {t('users.noUsers')}
                 </TableCell>
               </TableRow>
             )}
@@ -337,6 +339,7 @@ function CreateUserDialog({
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const { t } = useTranslation();
 
   const handleSave = async () => {
     setError('');
@@ -347,7 +350,7 @@ function CreateUserDialog({
       onClose();
       setForm({ username: '', displayName: '', password: '', type: 'drinker' });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -355,7 +358,7 @@ function CreateUserDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Neuer Benutzer</DialogTitle>
+      <DialogTitle>{t('users.createTitle')}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -364,7 +367,7 @@ function CreateUserDialog({
         )}
         <TextField
           fullWidth
-          label="Benutzername"
+          label={t('auth.username')}
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
           margin="dense"
@@ -372,7 +375,7 @@ function CreateUserDialog({
         />
         <TextField
           fullWidth
-          label="Anzeigename"
+          label={t('users.displayName')}
           value={form.displayName}
           onChange={(e) => setForm({ ...form, displayName: e.target.value })}
           margin="dense"
@@ -381,19 +384,19 @@ function CreateUserDialog({
         <TextField
           fullWidth
           select
-          label="Typ"
+          label={t('common.type')}
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value })}
           margin="dense"
         >
-          <MenuItem value="admin">Admin</MenuItem>
-          <MenuItem value="api">API-User</MenuItem>
-          <MenuItem value="drinker">Drinker</MenuItem>
+          <MenuItem value="admin">{t('users.typeAdmin')}</MenuItem>
+          <MenuItem value="api">{t('users.typeApi')}</MenuItem>
+          <MenuItem value="drinker">{t('users.typeDrinker')}</MenuItem>
         </TextField>
         {form.type !== 'api' && (
           <TextField
             fullWidth
-            label="Passwort"
+            label={t('auth.password')}
             type="password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -403,14 +406,14 @@ function CreateUserDialog({
         )}
         {form.type === 'drinker' && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Eine Terminal-PIN wird automatisch generiert.
+            {t('users.pinAutoGenerated')}
           </Typography>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button variant="contained" onClick={handleSave} disabled={saving}>
-          Erstellen
+          {t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -437,6 +440,7 @@ function EditUserDialog({
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { t } = useTranslation();
 
   const handleSave = async () => {
     setError('');
@@ -454,7 +458,7 @@ function EditUserDialog({
       onUpdated();
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -466,7 +470,7 @@ function EditUserDialog({
       onUpdated();
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
       setConfirmDelete(false);
     }
   };
@@ -497,7 +501,7 @@ function EditUserDialog({
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        Benutzer bearbeiten: {user.displayName}
+        {t('users.editTitle', { name: user.displayName })}
       </DialogTitle>
       <DialogContent>
         {error && (
@@ -507,7 +511,7 @@ function EditUserDialog({
         )}
         <TextField
           fullWidth
-          label="Anzeigename"
+          label={t('users.displayName')}
           value={form.displayName}
           onChange={(e) => setForm({ ...form, displayName: e.target.value })}
           margin="dense"
@@ -515,7 +519,7 @@ function EditUserDialog({
         {user.type !== 'api' && (
           <TextField
             fullWidth
-            label="Neues Passwort (leer lassen = unverändert)"
+            label={t('users.newPassword')}
             type="password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -526,25 +530,26 @@ function EditUserDialog({
           <>
             <TextField
               fullWidth
-              label="Guthaben (€)"
+              label={t('users.balanceLabel')}
               type="number"
               value={form.balance}
               onChange={(e) => setForm({ ...form, balance: e.target.value })}
               margin="dense"
             />
             <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
-              Identifier
+              {t('users.identifier')}
             </Typography>
             {form.identifiers.map((ident, idx) => (
               <Box
                 key={ident.id}
                 sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}
               >
-                <Chip label={ident.type.toUpperCase()} size="small" />
+                <Chip label={ident.type === 'kaba_nfc' ? 'KABA NFC (SN#)' : ident.type.toUpperCase()} size="small" />
                 <TextField
                   size="small"
                   value={ident.value}
                   onChange={(e) => updateIdentifier(idx, e.target.value)}
+                  placeholder={ident.type === 'kaba_nfc' ? '01:23:45:67:89:AB:CD' : ''}
                   sx={{ flex: 1 }}
                 />
                 <IconButton
@@ -556,8 +561,8 @@ function EditUserDialog({
                 </IconButton>
               </Box>
             ))}
-            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-              <Button size="small" onClick={() => addIdentifier('pin')}>
+            <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+              <Button size="small" onClick={() => addIdentifier('pin')} disabled={form.identifiers.some(i => i.type === 'pin')}>
                 + PIN
               </Button>
               <Button size="small" onClick={() => addIdentifier('rfid')}>
@@ -565,6 +570,9 @@ function EditUserDialog({
               </Button>
               <Button size="small" onClick={() => addIdentifier('nfc')}>
                 + NFC
+              </Button>
+              <Button size="small" onClick={() => addIdentifier('kaba_nfc')}>
+                + KABA NFC (SN#)
               </Button>
               <Button size="small" onClick={() => addIdentifier('qr')}>
                 + QR
@@ -574,7 +582,7 @@ function EditUserDialog({
         )}
         {user.type === 'api' && user.apiKey && (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2">API-Key</Typography>
+            <Typography variant="subtitle2">{t('users.apiKey')}</Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <TextField
                 size="small"
@@ -598,12 +606,12 @@ function EditUserDialog({
         <Box>
           {!confirmDelete ? (
             <Button color="error" onClick={() => setConfirmDelete(true)}>
-              Löschen
+              {t('common.delete')}
             </Button>
           ) : (
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <Typography variant="body2" color="error">
-                Wirklich löschen?
+                {t('common.confirmDelete')}
               </Typography>
               <Button
                 color="error"
@@ -611,18 +619,18 @@ function EditUserDialog({
                 size="small"
                 onClick={handleDelete}
               >
-                Ja
+                {t('common.yes')}
               </Button>
               <Button size="small" onClick={() => setConfirmDelete(false)}>
-                Nein
+                {t('common.no')}
               </Button>
             </Box>
           )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button onClick={onClose}>Abbrechen</Button>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            Speichern
+            {t('common.save')}
           </Button>
         </Box>
       </DialogActions>
@@ -631,14 +639,6 @@ function EditUserDialog({
 }
 
 /* ─── Info Dialog ─── */
-
-const LOG_TYPE_LABELS: Record<string, string> = {
-  coffee: 'Kaffee gezählt',
-  balance: 'Guthaben geändert',
-  login: 'Anmeldung',
-  user_created: 'Benutzer erstellt',
-  user_deleted: 'Benutzer gelöscht',
-};
 
 function InfoDialog({
   user,
@@ -651,26 +651,35 @@ function InfoDialog({
   loading: boolean;
   onClose: () => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const LOG_TYPE_LABELS: Record<string, string> = {
+    coffee: t('logs.coffee'),
+    balance: t('logs.balance'),
+    login: t('logs.login'),
+    user_created: t('logs.userCreated'),
+    user_deleted: t('logs.userDeleted'),
+  };
+
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Info: {user.displayName}</DialogTitle>
+      <DialogTitle>{t('users.infoTitle', { name: user.displayName })}</DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Benutzername
+            {t('auth.username')}
           </Typography>
           <Typography>{user.username}</Typography>
         </Box>
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Typ
+            {t('common.type')}
           </Typography>
           <Chip label={TYPE_LABELS[user.type]} size="small" />
         </Box>
         {user.type === 'drinker' && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Aktuelles Guthaben
+              {t('users.currentBalance')}
             </Typography>
             <Typography
               variant="h5"
@@ -683,19 +692,19 @@ function InfoDialog({
         )}
         <Divider sx={{ my: 2 }} />
         <Typography variant="h6" gutterBottom>
-          Aktivitätslog
+          {t('common.activityLog')}
         </Typography>
         {loading ? (
           <CircularProgress size={24} />
         ) : logs.length === 0 ? (
-          <Typography color="text.secondary">Keine Einträge</Typography>
+          <Typography color="text.secondary">{t('common.noEntries')}</Typography>
         ) : (
           <List dense sx={{ maxHeight: 300, overflow: 'auto' }}>
             {logs.slice(0, 50).map((log) => (
               <ListItem key={log.id}>
                 <ListItemText
                   primary={LOG_TYPE_LABELS[log.type] || log.type}
-                  secondary={`${new Date(log.createdAt).toLocaleString('de-DE')}${
+                  secondary={`${new Date(log.createdAt).toLocaleString(i18n.language === 'de' ? 'de-DE' : 'en-US')}${
                     log.details
                       ? ' — ' +
                         Object.entries(log.details)
@@ -710,7 +719,7 @@ function InfoDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Schließen</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

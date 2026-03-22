@@ -27,12 +27,15 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SearchIcon from '@mui/icons-material/Search';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import type { Terminal, Machine, LogEntry } from '../types';
 
@@ -40,6 +43,7 @@ type SortKey = 'name' | 'machineName';
 type SortDir = 'asc' | 'desc';
 
 export default function Terminals() {
+  const { t } = useTranslation();
   const [terminals, setTerminals] = useState<Terminal[]>([]);
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,7 +129,7 @@ export default function Terminals() {
         }}
       >
         <Typography variant="h4" fontWeight={700}>
-          Terminalverwaltung
+          {t('terminals.title')}
         </Typography>
         <Button
           variant="contained"
@@ -133,7 +137,7 @@ export default function Terminals() {
           onClick={() => setCreateOpen(true)}
           disabled={machines.length === 0}
         >
-          Neues Terminal
+          {t('terminals.newTerminal')}
         </Button>
       </Box>
 
@@ -145,13 +149,13 @@ export default function Terminals() {
 
       {machines.length === 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Erstelle zuerst eine Maschine, bevor du ein Terminal anlegen kannst.
+          {t('terminals.machineRequiredInfo')}
         </Alert>
       )}
 
       <TextField
         size="small"
-        placeholder="Suchen..."
+        placeholder={t('common.search')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         InputProps={{
@@ -174,54 +178,54 @@ export default function Terminals() {
                   direction={sortKey === 'name' ? sortDir : 'asc'}
                   onClick={() => handleSort('name')}
                 >
-                  Name
+                  {t('common.name')}
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Slug</TableCell>
+              <TableCell>{t('terminals.slug')}</TableCell>
               <TableCell>
                 <TableSortLabel
                   active={sortKey === 'machineName'}
                   direction={sortKey === 'machineName' ? sortDir : 'asc'}
                   onClick={() => handleSort('machineName')}
                 >
-                  Maschine
+                  {t('terminals.machine')}
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Typ</TableCell>
-              <TableCell align="right">Aktionen</TableCell>
+              <TableCell>{t('common.type')}</TableCell>
+              <TableCell align="right">{t('common.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered.map((t) => (
-              <TableRow key={t.id} hover>
-                <TableCell>{t.name}</TableCell>
+            {filtered.map((term) => (
+              <TableRow key={term.id} hover>
+                <TableCell>{term.name}</TableCell>
                 <TableCell>
-                  <Chip label={t.slug} size="small" variant="outlined" />
+                  <Chip label={term.slug} size="small" variant="outlined" />
                 </TableCell>
-                <TableCell>{getMachineName(t)}</TableCell>
+                <TableCell>{getMachineName(term)}</TableCell>
                 <TableCell>
-                  <Chip label={t.type.toUpperCase()} size="small" />
+                  <Chip label={term.type.toUpperCase()} size="small" />
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Terminal öffnen">
+                  <Tooltip title={t('terminals.openTerminal')}>
                     <IconButton
                       size="small"
                       onClick={() =>
-                        window.open(`/terminals/${t.slug}`, '_blank')
+                        window.open(`/terminals/${term.slug}`, '_blank')
                       }
                     >
                       <OpenInNewIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Info">
-                    <IconButton size="small" onClick={() => openInfo(t)}>
+                  <Tooltip title={t('common.info')}>
+                    <IconButton size="small" onClick={() => openInfo(term)}>
                       <InfoIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Bearbeiten">
+                  <Tooltip title={t('common.edit')}>
                     <IconButton
                       size="small"
-                      onClick={() => setEditTerminal(t)}
+                      onClick={() => setEditTerminal(term)}
                     >
                       <EditIcon />
                     </IconButton>
@@ -232,7 +236,7 @@ export default function Terminals() {
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  Keine Terminals gefunden
+                  {t('terminals.noTerminals')}
                 </TableCell>
               </TableRow>
             )}
@@ -290,6 +294,7 @@ function CreateTerminalDialog({
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const { t } = useTranslation();
 
   const handleSave = async () => {
     setError('');
@@ -300,7 +305,7 @@ function CreateTerminalDialog({
       onClose();
       setForm({ name: '', machineId: machines[0]?.id || '' });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -308,7 +313,7 @@ function CreateTerminalDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Neues Terminal</DialogTitle>
+      <DialogTitle>{t('terminals.createTitle')}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -317,17 +322,17 @@ function CreateTerminalDialog({
         )}
         <TextField
           fullWidth
-          label="Name"
+          label={t('common.name')}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           margin="dense"
           required
-          helperText="Der URL-Slug wird automatisch aus dem Namen generiert"
+          helperText={t('terminals.slugHelperText')}
         />
         <TextField
           fullWidth
           select
-          label="Maschine"
+          label={t('terminals.machine')}
           value={form.machineId}
           onChange={(e) => setForm({ ...form, machineId: e.target.value })}
           margin="dense"
@@ -341,9 +346,9 @@ function CreateTerminalDialog({
         </TextField>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button variant="contained" onClick={handleSave} disabled={saving}>
-          Erstellen
+          {t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -366,10 +371,12 @@ function EditTerminalDialog({
   const [form, setForm] = useState({
     name: terminal.name,
     machineId: terminal.machineId,
+    quickButtons: terminal.quickButtons || { enabled: false, button1: 5, button2: 10 },
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { t } = useTranslation();
 
   const handleSave = async () => {
     setError('');
@@ -379,7 +386,7 @@ function EditTerminalDialog({
       onUpdated();
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -391,14 +398,14 @@ function EditTerminalDialog({
       onUpdated();
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Fehler');
+      setError(e instanceof Error ? e.message : t('common.error'));
       setConfirmDelete(false);
     }
   };
 
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Terminal bearbeiten: {terminal.name}</DialogTitle>
+      <DialogTitle>{t('terminals.editTitle', { name: terminal.name })}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -407,7 +414,7 @@ function EditTerminalDialog({
         )}
         <TextField
           fullWidth
-          label="Name"
+          label={t('common.name')}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           margin="dense"
@@ -415,7 +422,7 @@ function EditTerminalDialog({
         <TextField
           fullWidth
           select
-          label="Maschine"
+          label={t('terminals.machine')}
           value={form.machineId}
           onChange={(e) => setForm({ ...form, machineId: e.target.value })}
           margin="dense"
@@ -426,17 +433,75 @@ function EditTerminalDialog({
             </MenuItem>
           ))}
         </TextField>
+
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            {t('terminals.quickButtons')}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.quickButtons.enabled}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quickButtons: { ...form.quickButtons, enabled: e.target.checked },
+                  })
+                }
+              />
+            }
+            label={t('terminals.quickButtonsEnabled')}
+          />
+          {form.quickButtons.enabled && (
+            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+              <TextField
+                label={t('terminals.quickButton1')}
+                type="number"
+                value={form.quickButtons.button1}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quickButtons: {
+                      ...form.quickButtons,
+                      button1: parseFloat(e.target.value) || 0,
+                    },
+                  })
+                }
+                inputProps={{ step: '0.5', min: '0.01' }}
+                size="small"
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                label={t('terminals.quickButton2')}
+                type="number"
+                value={form.quickButtons.button2}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quickButtons: {
+                      ...form.quickButtons,
+                      button2: parseFloat(e.target.value) || 0,
+                    },
+                  })
+                }
+                inputProps={{ step: '0.5', min: '0.01' }}
+                size="small"
+                sx={{ flex: 1 }}
+              />
+            </Box>
+          )}
+        </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between' }}>
         <Box>
           {!confirmDelete ? (
             <Button color="error" onClick={() => setConfirmDelete(true)}>
-              Löschen
+              {t('common.delete')}
             </Button>
           ) : (
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <Typography variant="body2" color="error">
-                Wirklich löschen?
+                {t('common.confirmDelete')}
               </Typography>
               <Button
                 color="error"
@@ -444,18 +509,18 @@ function EditTerminalDialog({
                 size="small"
                 onClick={handleDelete}
               >
-                Ja
+                {t('common.yes')}
               </Button>
               <Button size="small" onClick={() => setConfirmDelete(false)}>
-                Nein
+                {t('common.no')}
               </Button>
             </Box>
           )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button onClick={onClose}>Abbrechen</Button>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            Speichern
+            {t('common.save')}
           </Button>
         </Box>
       </DialogActions>
@@ -464,11 +529,6 @@ function EditTerminalDialog({
 }
 
 /* ─── Info ─── */
-
-const LOG_LABELS: Record<string, string> = {
-  coffee: 'Kaffee gezählt',
-  balance: 'Guthaben geändert',
-};
 
 function TerminalInfoDialog({
   terminal,
@@ -481,43 +541,49 @@ function TerminalInfoDialog({
   loading: boolean;
   onClose: () => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const LOG_LABELS: Record<string, string> = {
+    coffee: t('logs.coffee'),
+    balance: t('logs.balance'),
+  };
+
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Info: {terminal.name}</DialogTitle>
+      <DialogTitle>{t('terminals.infoTitle', { name: terminal.name })}</DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            URL-Slug
+            {t('terminals.urlSlug')}
           </Typography>
           <Typography>/terminals/{terminal.slug}</Typography>
         </Box>
         <Box sx={{ mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Maschine
+            {t('terminals.machine')}
           </Typography>
           <Typography>{terminal.machine?.name || '—'}</Typography>
         </Box>
         <Box sx={{ mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Typ
+            {t('common.type')}
           </Typography>
           <Chip label={terminal.type.toUpperCase()} size="small" />
         </Box>
         <Divider sx={{ my: 2 }} />
         <Typography variant="h6" gutterBottom>
-          Aktivitätslog
+          {t('common.activityLog')}
         </Typography>
         {loading ? (
           <CircularProgress size={24} />
         ) : logs.length === 0 ? (
-          <Typography color="text.secondary">Keine Einträge</Typography>
+          <Typography color="text.secondary">{t('common.noEntries')}</Typography>
         ) : (
           <List dense sx={{ maxHeight: 300, overflow: 'auto' }}>
             {logs.slice(0, 50).map((log) => (
               <ListItem key={log.id}>
                 <ListItemText
                   primary={LOG_LABELS[log.type] || log.type}
-                  secondary={new Date(log.createdAt).toLocaleString('de-DE')}
+                  secondary={new Date(log.createdAt).toLocaleString(i18n.language === 'de' ? 'de-DE' : 'en-US')}
                 />
               </ListItem>
             ))}
@@ -525,7 +591,7 @@ function TerminalInfoDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Schließen</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

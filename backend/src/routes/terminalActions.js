@@ -14,15 +14,52 @@ router.get('/:slug', (req, res) => {
   const machine = db.data.machines.find(m => m.id === terminal.machineId);
 
   const users = db.data.users
-    .filter(u => u.type === 'drinker' && u.identifiers.some(i => i.type === 'pin'))
+    .filter(u => u.type === 'drinker' && u.identifiers.some(i => i.type === 'pin' || i.type === 'kaba_nfc'))
     .map(u => ({ id: u.id, displayName: u.displayName }));
 
   res.json({
-    terminal: { id: terminal.id, name: terminal.name, slug: terminal.slug },
+    terminal: {
+      id: terminal.id,
+      name: terminal.name,
+      slug: terminal.slug,
+      quickButtons: terminal.quickButtons || { enabled: false, button1: 5, button2: 10 },
+    },
     machine: machine
       ? { id: machine.id, name: machine.name, room: machine.room, pricePerCoffee: machine.pricePerCoffee }
       : null,
     users,
+  });
+});
+
+// Verify NFC serial number → returns short-lived session token (no PIN needed)
+router.post('/:slug/verify-nfc', (req, res) => {
+  const { serialNumber } = req.body;
+  if (!serialNumber || typeof serialNumber !== 'string') {
+    return res.status(400).json({ error: 'Seriennummer erforderlich' });
+  }
+
+  const terminal = db.data.terminals.find(t => t.slug === req.params.slug);
+  if (!terminal) return res.status(404).json({ error: 'Terminal nicht gefunden' });
+
+  // Normalize: lowercase, trimmed
+  const normalized = serialNumber.toLowerCase().trim();
+
+  const user = db.data.users.find(
+    u => u.type === 'drinker' &&
+      u.identifiers.some(i => i.type === 'kaba_nfc' && i.value.toLowerCase().trim() === normalized),
+  );
+  if (!user) return res.status(404).json({ error: 'Kein Benutzer mit dieser NFC-Seriennummer gefunden' });
+
+  const sessionToken = jwt.sign(
+    { userId: user.id, terminalId: terminal.id, purpose: 'terminal-session' },
+    config.jwtSecret,
+    { expiresIn: '5m' },
+  );
+
+  res.json({
+    success: true,
+    sessionToken,
+    user: { id: user.id, displayName: user.displayName, balance: user.balance },
   });
 });
 
@@ -111,13 +148,20 @@ router.post('/:slug/update-balance', async (req, res) => {
   if (!session) return;
 
   const { user, terminal } = session;
-  const { amount } = req.body;
-  if (amount === undefined || isNaN(parseFloat(amount))) {
-    return res.status(400).json({ error: 'Betrag erforderlich' });
-  }
+  const { amount, mode } = req.body;
 
   const oldBalance = user.balance;
-  user.balance = parseFloat(amount);
+
+  if (mode === 'reset') {
+    user.balance = 0;
+  } else {
+    // mode === 'add' (default)
+    if (amount === undefined || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      return res.status(400).json({ error: 'Gültiger Betrag erforderlich' });
+    }
+    user.balance += parseFloat(amount);
+  }
+
   user.updatedAt = new Date().toISOString();
 
   db.data.logs.push({
@@ -126,7 +170,7 @@ router.post('/:slug/update-balance', async (req, res) => {
     userId: user.id,
     machineId: null,
     terminalId: terminal.id,
-    details: { oldBalance, newBalance: user.balance, method: 'terminal' },
+    details: { oldBalance, newBalance: user.balance, method: mode === 'reset' ? 'terminal-reset' : 'terminal-add' },
     createdAt: new Date().toISOString(),
   });
 

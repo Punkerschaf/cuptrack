@@ -93,17 +93,38 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ userId, pin }),
     }),
+  verifyNfc: (slug: string, serialNumber: string) =>
+    request<{
+      success: boolean;
+      sessionToken: string;
+      user: { id: string; displayName: string; balance: number };
+    }>(`/terminal-actions/${encodeURIComponent(slug)}/verify-nfc`, {
+      method: 'POST',
+      body: JSON.stringify({ serialNumber }),
+    }),
   countCoffee: (slug: string, sessionToken: string) =>
     request<{ success: boolean; newBalance: number }>(
       `/terminal-actions/${encodeURIComponent(slug)}/count-coffee`,
       { method: 'POST', body: JSON.stringify({ sessionToken }) },
     ),
-  updateBalance: (slug: string, sessionToken: string, amount: number) =>
+  updateBalance: (slug: string, sessionToken: string, amount: number, mode: 'add' | 'reset' = 'add') =>
     request<{ success: boolean; newBalance: number }>(
       `/terminal-actions/${encodeURIComponent(slug)}/update-balance`,
-      { method: 'POST', body: JSON.stringify({ sessionToken, amount }) },
+      { method: 'POST', body: JSON.stringify({ sessionToken, amount, mode }) },
     ),
+
+  // Version / Health
+  getVersion: () =>
+    request<{ status: string; version: string; codeName: string }>('/health'),
 
   // Stats
   getDashboardStats: () => request<DashboardStats>('/stats/dashboard'),
+
+  // Settings
+  getSettings: () => request<{ language: string }>('/settings'),
+  updateSettings: (data: { language: string }) =>
+    request<{ language: string }>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };
