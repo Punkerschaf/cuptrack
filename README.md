@@ -7,3 +7,4 @@ It simply tracks which user has drunk how many coffees and deducts the correspon
 
 ## Development
 The root user on the local dev-server is `root` with password `Coffee`. Change this as well as JWT secret in the .env-file of backend before deploying to production.
+There is a file `architecture.md` for AI coding agents to understand the architecture of the project without needing to read the entire codebase.
