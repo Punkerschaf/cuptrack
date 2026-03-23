@@ -127,4 +127,13 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  cleanupLogs: () =>
+    request<{ deletedCount: number; periodFrom?: string; periodTo?: string; message?: string }>(
+      '/settings/cleanup-logs',
+      { method: 'DELETE' },
+    ),
+  getLogCleanups: () =>
+    request<{ deletedAt: string; deletedBy: string; deletedCount: number; periodFrom: string; periodTo: string }[]>(
+      '/settings/log-cleanups',
+    ),
 };

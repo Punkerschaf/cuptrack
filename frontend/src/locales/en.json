@@ -35,7 +35,8 @@
     "dashboard": "Dashboard",
     "users": "Users",
     "machines": "Machines",
-    "terminals": "Terminals"
+    "terminals": "Terminals",
+    "settings": "Settings"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -137,8 +138,22 @@
     "userDeleted": "User deleted"
   },
   "settings": {
+    "title": "System Settings",
     "language": "Language",
     "german": "Deutsch",
-    "english": "English"
+    "english": "English",
+    "logCleanup": "Log Cleanup",
+    "logCleanupDescription": "Deletes all logs older than one year. Statistics (total coffees, top drinkers, popular machines) will remain unaffected.",
+    "deleteOldLogs": "Delete old logs (> 1 year)",
+    "noOldLogs": "No logs older than one year found.",
+    "logsDeleted": "{{count}} logs deleted (period: {{from}} – {{to}}).",
+    "cleanupError": "Error deleting logs.",
+    "confirmCleanupTitle": "Really delete logs?",
+    "confirmCleanupText": "All logs older than one year will be permanently deleted. Statistics will be preserved. This action cannot be undone.",
+    "cleanupHistory": "Cleanup History",
+    "cleanupDate": "Date",
+    "cleanupBy": "Performed by",
+    "cleanupCount": "Deleted Logs",
+    "cleanupPeriod": "Period"
   }
 }

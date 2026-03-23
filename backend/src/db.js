@@ -16,6 +16,12 @@ const defaultData = {
   terminals: [],
   logs: [],
   settings: { language: 'de' },
+  archivedStats: {
+    totalCoffees: 0,
+    coffeesByUser: {},
+    coffeesByMachine: {},
+  },
+  logCleanups: [],
 };
 
 const db = await JSONFilePreset(join(dataDir, 'db.json'), defaultData);

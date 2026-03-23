@@ -35,7 +35,8 @@
     "dashboard": "Dashboard",
     "users": "Benutzer",
     "machines": "Maschinen",
-    "terminals": "Terminals"
+    "terminals": "Terminals",
+    "settings": "Einstellungen"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -137,8 +138,22 @@
     "userDeleted": "Benutzer gelöscht"
   },
   "settings": {
+    "title": "Systemeinstellungen",
     "language": "Sprache",
     "german": "Deutsch",
-    "english": "English"
+    "english": "English",
+    "logCleanup": "Log-Bereinigung",
+    "logCleanupDescription": "Löscht alle Logs, die älter als ein Jahr sind. Die Statistiken (Gesamtkaffees, Top-Trinker, beliebteste Maschinen) bleiben davon unberührt.",
+    "deleteOldLogs": "Alte Logs löschen (> 1 Jahr)",
+    "noOldLogs": "Keine Logs älter als ein Jahr gefunden.",
+    "logsDeleted": "{{count}} Logs gelöscht (Zeitraum: {{from}} – {{to}}).",
+    "cleanupError": "Fehler beim Löschen der Logs.",
+    "confirmCleanupTitle": "Logs wirklich löschen?",
+    "confirmCleanupText": "Alle Logs, die älter als ein Jahr sind, werden unwiderruflich gelöscht. Die Statistiken bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden.",
+    "cleanupHistory": "Bereinigungsverlauf",
+    "cleanupDate": "Datum",
+    "cleanupBy": "Durchgeführt von",
+    "cleanupCount": "Gelöschte Logs",
+    "cleanupPeriod": "Zeitraum"
   }
 }

@@ -55,6 +55,7 @@ cuptrack/
         │   ├── Users.tsx         # User management
         │   ├── Machines.tsx      # Machine management
         │   ├── Terminals.tsx     # Terminal management
+        │   ├── Settings.tsx      # System settings (language, log cleanup)
         │   └── terminal/
         │       └── TerminalView.tsx  # Public-facing coffee terminal UI
         └── locales/
@@ -164,6 +165,27 @@ Default root login in dev: `root` / `Coffee` (configured via `ROOT_USERNAME` / `
 }
 ```
 
+### Archived Stats
+```
+{
+  totalCoffees: number,          // aggregated from deleted logs
+  coffeesByUser: { [userId]: number },
+  coffeesByMachine: { [machineId]: number }
+}
+```
+Preserves statistical totals when old logs are cleaned up. The dashboard stats route merges these with current log data.
+
+### Log Cleanup Record
+```
+{
+  deletedAt: ISO timestamp,
+  deletedBy: string,             // admin username
+  deletedCount: number,
+  periodFrom: ISO timestamp,     // oldest deleted log
+  periodTo: ISO timestamp        // newest deleted log
+}
+```
+
 ---
 
 ## Database Schema (lowdb)
@@ -176,7 +198,9 @@ The JSON database (`backend/data/db.json`) has these top-level collections:
   "machines": [],
   "terminals": [],
   "logs": [],
-  "settings": { "language": "de" }
+  "settings": { "language": "de" },
+  "archivedStats": { "totalCoffees": 0, "coffeesByUser": {}, "coffeesByMachine": {} },
+  "logCleanups": []
 }
 ```
 
@@ -239,10 +263,12 @@ All routes are mounted under `/api`.
 | GET    | `/dashboard` | Aggregated stats (today, 30-day trend, top 5)  |
 
 ### Settings — `/api/settings`
-| Method | Path | Auth      | Purpose                    |
-|--------|------|-----------|----------------------------|
-| GET    | `/`  | None      | Get global settings        |
-| PUT    | `/`  | JWT+Admin | Update settings (language)  |
+| Method | Path             | Auth      | Purpose                                    |
+|--------|------------------|-----------|--------------------------------------------|
+| GET    | `/`              | None      | Get global settings                        |
+| PUT    | `/`              | JWT+Admin | Update settings (language)                 |
+| DELETE | `/cleanup-logs`  | JWT+Admin | Delete logs older than 1 year, archive stats |
+| GET    | `/log-cleanups`  | JWT+Admin | Get log cleanup history                    |
 
 ### Health — `/api/health`
 | Method | Path | Auth | Purpose                      |
@@ -279,6 +305,7 @@ All routes are mounted under `/api`.
   /dashboard/users           → Users.tsx
   /dashboard/machines        → Machines.tsx
   /dashboard/terminals       → Terminals.tsx
+  /dashboard/settings        → Settings.tsx
 /                            → Redirect to /dashboard
 ```
 
@@ -297,6 +324,7 @@ All routes are mounted under `/api`.
 - **API client** — All frontend API calls go through `frontend/src/api.ts` which auto-attaches the JWT and provides typed methods.
 - **Alphabet filter** — The terminal user list can display A-Z filter buttons so users can quickly narrow down the list by first letter. Only letters with matching users are shown. Configurable per terminal via `alphabetFilter.enabled` (default: `true`).
 - **Root user protection** — The bootstrapped root admin cannot be edited or deleted via the API.
+- **Log cleanup** — Admins can manually delete logs older than one year via the Settings page. Before deletion, coffee statistics are aggregated into `archivedStats` so dashboard totals (total coffees, top drinkers, popular machines) remain accurate. Each cleanup is recorded in `logCleanups` with timestamp, admin name, count, and affected time range.
 
 ---
 
