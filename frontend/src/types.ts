@@ -34,6 +34,7 @@ export interface Terminal {
   type: 'web' | 'api';
   machine?: Machine | null;
   quickButtons?: { enabled: boolean; button1: number; button2: number };
+  alphabetFilter?: { enabled: boolean };
   createdAt: string;
   updatedAt: string;
 }
@@ -65,6 +66,7 @@ export interface TerminalInfo {
     name: string;
     slug: string;
     quickButtons?: { enabled: boolean; button1: number; button2: number };
+    alphabetFilter?: { enabled: boolean };
   };
   machine: {
     id: string;

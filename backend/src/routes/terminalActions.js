@@ -23,6 +23,7 @@ router.get('/:slug', (req, res) => {
       name: terminal.name,
       slug: terminal.slug,
       quickButtons: terminal.quickButtons || { enabled: false, button1: 5, button2: 10 },
+      alphabetFilter: terminal.alphabetFilter || { enabled: true },
     },
     machine: machine
       ? { id: machine.id, name: machine.name, room: machine.room, pricePerCoffee: machine.pricePerCoffee }
