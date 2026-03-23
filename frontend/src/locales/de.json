@@ -99,7 +99,9 @@
     "quickButtons": "Schnellaufladung",
     "quickButtonsEnabled": "Schnellaufladebuttons aktivieren",
     "quickButton1": "Betrag Button 1 (€)",
-    "quickButton2": "Betrag Button 2 (€)"
+    "quickButton2": "Betrag Button 2 (€)",
+    "alphabetFilter": "Alphabet-Filter",
+    "alphabetFilterEnabled": "Alphabet-Filter in Benutzerliste aktivieren"
   },
   "terminalView": {
     "selectName": "Wähle deinen Namen:",

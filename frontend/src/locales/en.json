@@ -99,7 +99,9 @@
     "quickButtons": "Quick Top-Up",
     "quickButtonsEnabled": "Enable quick top-up buttons",
     "quickButton1": "Amount Button 1 (€)",
-    "quickButton2": "Amount Button 2 (€)"
+    "quickButton2": "Amount Button 2 (€)",
+    "alphabetFilter": "Alphabet Filter",
+    "alphabetFilterEnabled": "Enable alphabet filter in user list"
   },
   "terminalView": {
     "selectName": "Select your name:",
