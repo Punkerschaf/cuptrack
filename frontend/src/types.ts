@@ -76,3 +76,14 @@ export interface TerminalInfo {
   } | null;
   users: { id: string; displayName: string }[];
 }
+
+export interface CashBookEntry {
+  id: string;
+  type: 'deposit' | 'withdrawal' | 'anonymous_coffee';
+  amount: number;
+  comment: string;
+  machineId: string | null;
+  terminalId: string | null;
+  performedBy: string;
+  createdAt: string;
+}

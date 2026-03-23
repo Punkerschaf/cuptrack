@@ -1,4 +1,4 @@
-import type { User, Machine, Terminal, LogEntry, DashboardStats, TerminalInfo } from './types';
+import type { User, Machine, Terminal, LogEntry, DashboardStats, TerminalInfo, CashBookEntry } from './types';
 
 const BASE = '/api';
 
@@ -135,5 +135,30 @@ export const api = {
   getLogCleanups: () =>
     request<{ deletedAt: string; deletedBy: string; deletedCount: number; periodFrom: string; periodTo: string }[]>(
       '/settings/log-cleanups',
+    ),
+
+  // Cash Book
+  getCashBook: () => request<CashBookEntry[]>('/cashbook'),
+  getCashBookBalance: () => request<{ balance: number }>('/cashbook/balance'),
+  createCashBookDeposit: (data: { amount: number; comment: string }) =>
+    request<CashBookEntry>('/cashbook/deposit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  createCashBookWithdrawal: (data: { amount: number; comment: string }) =>
+    request<CashBookEntry>('/cashbook/withdrawal', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  deleteCashBookEntry: (id: string) =>
+    request<{ success: boolean }>(`/cashbook/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+
+  // Terminal: Anonymous coffee
+  recordAnonymousCoffee: (slug: string) =>
+    request<{ success: boolean; price: number }>(
+      `/terminal-actions/${encodeURIComponent(slug)}/anonymous-coffee`,
+      { method: 'POST' },
     ),
 };

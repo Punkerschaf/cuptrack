@@ -22,6 +22,7 @@ import CoffeeMakerIcon from '@mui/icons-material/CoffeeMaker';
 import TabletIcon from '@mui/icons-material/Tablet';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -54,6 +55,7 @@ export default function DashboardLayout() {
       path: '/dashboard/machines',
     },
     { text: t('nav.terminals'), icon: <TabletIcon />, path: '/dashboard/terminals' },
+    { text: t('nav.cashBook'), icon: <AccountBalanceWalletIcon />, path: '/dashboard/cashbook' },
     { text: t('nav.settings'), icon: <SettingsIcon />, path: '/dashboard/settings' },
   ];
 

@@ -36,7 +36,8 @@
     "users": "Benutzer",
     "machines": "Maschinen",
     "terminals": "Terminals",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "cashBook": "Kassenbuch"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -122,6 +123,8 @@
     "newBalance": "Neues Guthaben:",
     "balanceUpdated": "Guthaben aktualisiert!",
     "backToStart": "Zurück zum Start in wenigen Sekunden...",
+    "guestCoffee": "Gast-Kaffee",
+    "guestCoffeeSuccess": "Gast-Kaffee erfasst! ({{price}} €)",
     "currentBalance": "Aktuelles Guthaben: {{balance}} €",
     "addAmountLabel": "Betrag zum Aufladen (€)",
     "addBalance": "aufladen",
@@ -135,7 +138,10 @@
     "balance": "Guthaben geändert",
     "login": "Anmeldung",
     "userCreated": "Benutzer erstellt",
-    "userDeleted": "Benutzer gelöscht"
+    "userDeleted": "Benutzer gelöscht",
+    "cashbook": "Kassenbuch",
+    "anonymousCoffee": "Gast-Kaffee",
+    "balanceTopUp": "Guthaben aufgeladen (Kassenbuch)"
   },
   "settings": {
     "title": "Systemeinstellungen",
@@ -155,5 +161,27 @@
     "cleanupBy": "Durchgeführt von",
     "cleanupCount": "Gelöschte Logs",
     "cleanupPeriod": "Zeitraum"
+  },
+  "cashBook": {
+    "title": "Kassenbuch",
+    "balance": "Aktueller Saldo",
+    "deposit": "Einzahlung",
+    "withdrawal": "Entnahme",
+    "anonymousCoffee": "Gast-Kaffee",
+    "amount": "Betrag",
+    "amountLabel": "Betrag (€)",
+    "comment": "Kommentar",
+    "newDeposit": "Neue Einzahlung",
+    "newWithdrawal": "Neue Entnahme",
+    "newTransaction": "Neue Buchung",
+    "noEntries": "Keine Einträge vorhanden",
+    "date": "Datum",
+    "type": "Typ",
+    "performedBy": "Durchgeführt von",
+    "terminal": "Terminal",
+    "confirmDeleteTitle": "Eintrag löschen?",
+    "confirmDeleteText": "Soll dieser Kassenbuch-Eintrag wirklich gelöscht werden? Dieser Vorgang kann nicht rückgängig gemacht werden.",
+    "errorLoading": "Fehler beim Laden des Kassenbuchs",
+    "machine": "Maschine"
   }
 }

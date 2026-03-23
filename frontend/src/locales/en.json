@@ -36,7 +36,8 @@
     "users": "Users",
     "machines": "Machines",
     "terminals": "Terminals",
-    "settings": "Settings"
+    "settings": "Settings",
+    "cashBook": "Cash Book"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -122,6 +123,8 @@
     "newBalance": "New balance:",
     "balanceUpdated": "Balance updated!",
     "backToStart": "Returning to start in a few seconds...",
+    "guestCoffee": "Guest Coffee",
+    "guestCoffeeSuccess": "Guest coffee recorded! ({{price}} €)",
     "currentBalance": "Current balance: {{balance}} €",
     "addAmountLabel": "Amount to add (€)",
     "addBalance": "add",
@@ -135,7 +138,10 @@
     "balance": "Balance changed",
     "login": "Login",
     "userCreated": "User created",
-    "userDeleted": "User deleted"
+    "userDeleted": "User deleted",
+    "cashbook": "Cash Book",
+    "anonymousCoffee": "Guest Coffee",
+    "balanceTopUp": "Balance top-up (Cash Book)"
   },
   "settings": {
     "title": "System Settings",
@@ -155,5 +161,27 @@
     "cleanupBy": "Performed by",
     "cleanupCount": "Deleted Logs",
     "cleanupPeriod": "Period"
+  },
+  "cashBook": {
+    "title": "Cash Book",
+    "balance": "Current Balance",
+    "deposit": "Deposit",
+    "withdrawal": "Withdrawal",
+    "anonymousCoffee": "Guest Coffee",
+    "amount": "Amount",
+    "amountLabel": "Amount (€)",
+    "comment": "Comment",
+    "newDeposit": "New Deposit",
+    "newWithdrawal": "New Withdrawal",
+    "newTransaction": "New Transaction",
+    "noEntries": "No entries yet",
+    "date": "Date",
+    "type": "Type",
+    "performedBy": "Performed by",
+    "terminal": "Terminal",
+    "confirmDeleteTitle": "Delete entry?",
+    "confirmDeleteText": "Do you really want to delete this cash book entry? This action cannot be undone.",
+    "errorLoading": "Error loading cash book",
+    "machine": "Machine"
   }
 }

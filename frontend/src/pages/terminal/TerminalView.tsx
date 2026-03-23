@@ -30,7 +30,8 @@ type Step =
   | 'menu'
   | 'counting'
   | 'editBalance'
-  | 'balanceUpdated';
+  | 'balanceUpdated'
+  | 'guestCoffeeCounted';
 
 export default function TerminalView() {
   const { terminalName } = useParams<{ terminalName: string }>();
@@ -58,6 +59,7 @@ export default function TerminalView() {
   const [nfcSupported] = useState(() => 'NDEFReader' in window);
   const [codeName, setCodeName] = useState('');
   const [connected, setConnected] = useState(true);
+  const [guestCoffeePrice, setGuestCoffeePrice] = useState(0);
 
   useEffect(() => {
     api.getVersion().then((v) => setCodeName(v.codeName)).catch(() => {});
@@ -166,7 +168,7 @@ export default function TerminalView() {
 
   // Auto-redirect after confirmation screens
   useEffect(() => {
-    if (step === 'counting' || step === 'balanceUpdated') {
+    if (step === 'counting' || step === 'balanceUpdated' || step === 'guestCoffeeCounted') {
       const timer = setTimeout(resetToHome, 3000);
       return () => clearTimeout(timer);
     }
@@ -245,6 +247,17 @@ export default function TerminalView() {
       );
       setBalance(res.newBalance);
       setStep('balanceUpdated');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : t('common.error'));
+    }
+  };
+
+  const handleGuestCoffee = async () => {
+    if (!terminalName) return;
+    try {
+      const res = await api.recordAnonymousCoffee(terminalName);
+      setGuestCoffeePrice(res.price);
+      setStep('guestCoffeeCounted');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t('common.error'));
     }
@@ -455,6 +468,34 @@ export default function TerminalView() {
             )}
           </List>
         </Paper>
+
+        {/* Guest Coffee Button */}
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+          <Button
+            variant="outlined"
+            size="large"
+            startIcon={<LocalCafeIcon />}
+            onClick={handleGuestCoffee}
+            sx={{
+              py: 1.5,
+              px: 4,
+              fontSize: '1.1rem',
+              color: '#6F4E37',
+              borderColor: '#6F4E37',
+              '&:hover': { backgroundColor: '#FAF6F1', borderColor: '#4E3524' },
+            }}
+          >
+            {t('terminalView.guestCoffee')}
+            {info.machine && (
+              <Typography
+                component="span"
+                sx={{ ml: 1, fontSize: '0.9rem', opacity: 0.8 }}
+              >
+                ({info.machine.pricePerCoffee.toFixed(2)} €)
+              </Typography>
+            )}
+          </Button>
+        </Box>
       </TerminalWrapper>
     );
   }
@@ -817,6 +858,23 @@ export default function TerminalView() {
             >
               {balance.toFixed(2)} €
             </strong>
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 2 }}>
+            {t('terminalView.backToStart')}
+          </Typography>
+        </Box>
+      </TerminalWrapper>
+    );
+  }
+
+  // ─── Guest Coffee Confirmation ───
+  if (step === 'guestCoffeeCounted') {
+    return (
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
+        <Box sx={{ textAlign: 'center' }}>
+          <LocalCafeIcon sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
+          <Typography variant="h4" fontWeight={700} color="success.main">
+            {t('terminalView.guestCoffeeSuccess', { price: guestCoffeePrice.toFixed(2) })}
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 2 }}>
             {t('terminalView.backToStart')}

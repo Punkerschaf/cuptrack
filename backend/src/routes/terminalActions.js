@@ -89,6 +89,44 @@ router.post('/:slug/verify-pin', (req, res) => {
   });
 });
 
+// Anonymous coffee (guest – no auth required)
+router.post('/:slug/anonymous-coffee', async (req, res) => {
+  const terminal = db.data.terminals.find(t => t.slug === req.params.slug);
+  if (!terminal) return res.status(404).json({ error: 'Terminal nicht gefunden' });
+
+  const machine = db.data.machines.find(m => m.id === terminal.machineId);
+  if (!machine) return res.status(500).json({ error: 'Maschine nicht gefunden' });
+
+  const price = machine.pricePerCoffee;
+
+  const entry = {
+    id: uuidv4(),
+    type: 'anonymous_coffee',
+    amount: price,
+    comment: '',
+    machineId: machine.id,
+    terminalId: terminal.id,
+    performedBy: 'terminal',
+    createdAt: new Date().toISOString(),
+  };
+
+  if (!db.data.cashBook) db.data.cashBook = [];
+  db.data.cashBook.push(entry);
+
+  db.data.logs.push({
+    id: uuidv4(),
+    type: 'anonymous_coffee',
+    userId: null,
+    machineId: machine.id,
+    terminalId: terminal.id,
+    details: { price },
+    createdAt: entry.createdAt,
+  });
+
+  await db.write();
+  res.json({ success: true, price });
+});
+
 // Helper: validate terminal session token
 function verifySession(req, res) {
   const { sessionToken } = req.body;
@@ -165,6 +203,8 @@ router.post('/:slug/update-balance', async (req, res) => {
 
   user.updatedAt = new Date().toISOString();
 
+  const now = new Date().toISOString();
+
   db.data.logs.push({
     id: uuidv4(),
     type: 'balance',
@@ -172,8 +212,32 @@ router.post('/:slug/update-balance', async (req, res) => {
     machineId: null,
     terminalId: terminal.id,
     details: { oldBalance, newBalance: user.balance, method: mode === 'reset' ? 'terminal-reset' : 'terminal-add' },
-    createdAt: new Date().toISOString(),
+    createdAt: now,
   });
+
+  // Cash book: terminal top-ups = real money deposited into the cash box
+  let cashBookAmount = 0;
+  if (mode === 'reset' && oldBalance < 0) {
+    // Resetting a negative balance means the user paid off their debt
+    cashBookAmount = Math.round(Math.abs(oldBalance) * 100) / 100;
+  } else if (mode !== 'reset') {
+    // Regular top-up at terminal
+    cashBookAmount = Math.round(parseFloat(amount) * 100) / 100;
+  }
+
+  if (cashBookAmount > 0) {
+    if (!db.data.cashBook) db.data.cashBook = [];
+    db.data.cashBook.push({
+      id: uuidv4(),
+      type: 'deposit',
+      amount: cashBookAmount,
+      comment: '',
+      machineId: null,
+      terminalId: terminal.id,
+      performedBy: user.id,
+      createdAt: now,
+    });
+  }
 
   await db.write();
   res.json({ success: true, newBalance: user.balance });

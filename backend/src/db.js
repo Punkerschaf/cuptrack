@@ -15,6 +15,7 @@ const defaultData = {
   machines: [],
   terminals: [],
   logs: [],
+  cashBook: [],
   settings: { language: 'de' },
   archivedStats: {
     totalCoffees: 0,
