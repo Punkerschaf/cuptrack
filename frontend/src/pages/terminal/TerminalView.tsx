@@ -51,6 +51,7 @@ export default function TerminalView() {
   const [balance, setBalance] = useState(0);
   const [newBalance, setNewBalance] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [alphabetFilter, setAlphabetFilter] = useState<string | null>(null);
   const [nfcScanning, setNfcScanning] = useState(false);
   const [nfcStatus, setNfcStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
   const [nfcError, setNfcError] = useState('');
@@ -99,6 +100,7 @@ export default function TerminalView() {
     setBalance(0);
     setNewBalance('');
     setUserSearch('');
+    setAlphabetFilter(null);
     setNfcScanning(false);
     setNfcStatus('idle');
     setNfcError('');
@@ -266,9 +268,28 @@ export default function TerminalView() {
 
   // ─── Home: User list ───
   if (step === 'home') {
-    const filteredUsers = info.users.filter((u) =>
-      u.displayName.toLowerCase().includes(userSearch.toLowerCase()),
-    );
+    const alphabetFilterEnabled = info.terminal.alphabetFilter?.enabled !== false;
+
+    // Compute available letters from all users
+    const availableLetters = alphabetFilterEnabled
+      ? Array.from(
+          new Set(
+            info.users
+              .map((u) => u.displayName.charAt(0).toUpperCase())
+              .filter((c) => c.length > 0),
+          ),
+        ).sort((a, b) => a.localeCompare(b))
+      : [];
+
+    const filteredUsers = info.users.filter((u) => {
+      const matchesSearch = u.displayName
+        .toLowerCase()
+        .includes(userSearch.toLowerCase());
+      const matchesLetter =
+        !alphabetFilter ||
+        u.displayName.charAt(0).toUpperCase() === alphabetFilter;
+      return matchesSearch && matchesLetter;
+    });
 
     return (
       <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
@@ -288,7 +309,7 @@ export default function TerminalView() {
           )}
         </Box>
 
-        <Typography variant="h6" gutterBottom sx={{ textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ textAlign: 'center' }}>
           {t('terminalView.selectName')}
         </Typography>
 
@@ -342,6 +363,66 @@ export default function TerminalView() {
               ),
             }}
           />
+        )}
+
+        {alphabetFilterEnabled && availableLetters.length > 1 && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.5,
+              justifyContent: 'center',
+              mb: 1,
+            }}
+          >
+            <Button
+              variant={alphabetFilter === null ? 'contained' : 'outlined'}
+              onClick={() => setAlphabetFilter(null)}
+              sx={{
+                minWidth: 44,
+                minHeight: 44,
+                px: 1.5,
+                py: 1,
+                fontSize: '1rem',
+                fontWeight: alphabetFilter === null ? 700 : 400,
+                backgroundColor: alphabetFilter === null ? '#6F4E37' : undefined,
+                color: alphabetFilter === null ? 'white' : '#6F4E37',
+                borderColor: '#6F4E37',
+                '&:hover': {
+                  backgroundColor: alphabetFilter === null ? '#4E3524' : '#FAF6F1',
+                },
+              }}
+            >
+              {t('common.all')}
+            </Button>
+            {availableLetters.map((letter) => (
+              <Button
+                key={letter}
+                variant={alphabetFilter === letter ? 'contained' : 'outlined'}
+                onClick={() =>
+                  setAlphabetFilter(alphabetFilter === letter ? null : letter)
+                }
+                sx={{
+                  minWidth: 44,
+                  minHeight: 44,
+                  px: 1.5,
+                  py: 1,
+                  fontSize: '1rem',
+                  fontWeight: alphabetFilter === letter ? 700 : 400,
+                  backgroundColor:
+                    alphabetFilter === letter ? '#6F4E37' : undefined,
+                  color: alphabetFilter === letter ? 'white' : '#6F4E37',
+                  borderColor: '#6F4E37',
+                  '&:hover': {
+                    backgroundColor:
+                      alphabetFilter === letter ? '#4E3524' : '#FAF6F1',
+                  },
+                }}
+              >
+                {letter}
+              </Button>
+            ))}
+          </Box>
         )}
 
         <Paper

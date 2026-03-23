@@ -136,6 +136,9 @@ Default root login in dev: `root` / `Coffee` (configured via `ROOT_USERNAME` / `
     button1: number,
     button2: number
   },
+  alphabetFilter: {              // A-Z filter buttons on user list
+    enabled: boolean             // default: true
+  },
   createdAt: ISO timestamp,
   updatedAt: ISO timestamp
 }
@@ -292,6 +295,7 @@ All routes are mounted under `/api`.
 - **Audit logging** — Coffee consumption, balance changes, and logins are logged to the `logs` collection.
 - **i18n** — All UI strings go through i18next. Translation files: `frontend/src/locales/{de,en}.json`. Language is server-side configurable via settings.
 - **API client** — All frontend API calls go through `frontend/src/api.ts` which auto-attaches the JWT and provides typed methods.
+- **Alphabet filter** — The terminal user list can display A-Z filter buttons so users can quickly narrow down the list by first letter. Only letters with matching users are shown. Configurable per terminal via `alphabetFilter.enabled` (default: `true`).
 - **Root user protection** — The bootstrapped root admin cannot be edited or deleted via the API.
 
 ---
