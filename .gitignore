@@ -143,3 +143,6 @@ vite.config.ts.timestamp-*
 
 # Local stuff
 tasks.md
+
+# Docker Images
+*.tar.gz
