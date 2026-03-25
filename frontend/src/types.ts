@@ -34,6 +34,7 @@ export interface Terminal {
   type: 'web' | 'api';
   machine?: Machine | null;
   quickButtons?: { enabled: boolean; button1: number; button2: number };
+  alphabetFilter?: { enabled: boolean };
   createdAt: string;
   updatedAt: string;
 }
@@ -65,6 +66,7 @@ export interface TerminalInfo {
     name: string;
     slug: string;
     quickButtons?: { enabled: boolean; button1: number; button2: number };
+    alphabetFilter?: { enabled: boolean };
   };
   machine: {
     id: string;
@@ -73,4 +75,15 @@ export interface TerminalInfo {
     pricePerCoffee: number;
   } | null;
   users: { id: string; displayName: string }[];
+}
+
+export interface CashBookEntry {
+  id: string;
+  type: 'deposit' | 'withdrawal' | 'anonymous_coffee';
+  amount: number;
+  comment: string;
+  machineId: string | null;
+  terminalId: string | null;
+  performedBy: string;
+  createdAt: string;
 }

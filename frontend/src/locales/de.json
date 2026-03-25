@@ -35,7 +35,9 @@
     "dashboard": "Dashboard",
     "users": "Benutzer",
     "machines": "Maschinen",
-    "terminals": "Terminals"
+    "terminals": "Terminals",
+    "settings": "Einstellungen",
+    "cashBook": "Kassenbuch"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -99,7 +101,9 @@
     "quickButtons": "Schnellaufladung",
     "quickButtonsEnabled": "Schnellaufladebuttons aktivieren",
     "quickButton1": "Betrag Button 1 (€)",
-    "quickButton2": "Betrag Button 2 (€)"
+    "quickButton2": "Betrag Button 2 (€)",
+    "alphabetFilter": "Alphabet-Filter",
+    "alphabetFilterEnabled": "Alphabet-Filter in Benutzerliste aktivieren"
   },
   "terminalView": {
     "selectName": "Wähle deinen Namen:",
@@ -119,6 +123,8 @@
     "newBalance": "Neues Guthaben:",
     "balanceUpdated": "Guthaben aktualisiert!",
     "backToStart": "Zurück zum Start in wenigen Sekunden...",
+    "guestCoffee": "Gast-Kaffee",
+    "guestCoffeeSuccess": "Gast-Kaffee erfasst! ({{price}} €)",
     "currentBalance": "Aktuelles Guthaben: {{balance}} €",
     "addAmountLabel": "Betrag zum Aufladen (€)",
     "addBalance": "aufladen",
@@ -132,11 +138,50 @@
     "balance": "Guthaben geändert",
     "login": "Anmeldung",
     "userCreated": "Benutzer erstellt",
-    "userDeleted": "Benutzer gelöscht"
+    "userDeleted": "Benutzer gelöscht",
+    "cashbook": "Kassenbuch",
+    "anonymousCoffee": "Gast-Kaffee",
+    "balanceTopUp": "Guthaben aufgeladen (Kassenbuch)"
   },
   "settings": {
+    "title": "Systemeinstellungen",
     "language": "Sprache",
     "german": "Deutsch",
-    "english": "English"
+    "english": "English",
+    "logCleanup": "Log-Bereinigung",
+    "logCleanupDescription": "Löscht alle Logs, die älter als ein Jahr sind. Die Statistiken (Gesamtkaffees, Top-Trinker, beliebteste Maschinen) bleiben davon unberührt.",
+    "deleteOldLogs": "Alte Logs löschen (> 1 Jahr)",
+    "noOldLogs": "Keine Logs älter als ein Jahr gefunden.",
+    "logsDeleted": "{{count}} Logs gelöscht (Zeitraum: {{from}} – {{to}}).",
+    "cleanupError": "Fehler beim Löschen der Logs.",
+    "confirmCleanupTitle": "Logs wirklich löschen?",
+    "confirmCleanupText": "Alle Logs, die älter als ein Jahr sind, werden unwiderruflich gelöscht. Die Statistiken bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden.",
+    "cleanupHistory": "Bereinigungsverlauf",
+    "cleanupDate": "Datum",
+    "cleanupBy": "Durchgeführt von",
+    "cleanupCount": "Gelöschte Logs",
+    "cleanupPeriod": "Zeitraum"
+  },
+  "cashBook": {
+    "title": "Kassenbuch",
+    "balance": "Aktueller Saldo",
+    "deposit": "Einzahlung",
+    "withdrawal": "Entnahme",
+    "anonymousCoffee": "Gast-Kaffee",
+    "amount": "Betrag",
+    "amountLabel": "Betrag (€)",
+    "comment": "Kommentar",
+    "newDeposit": "Neue Einzahlung",
+    "newWithdrawal": "Neue Entnahme",
+    "newTransaction": "Neue Buchung",
+    "noEntries": "Keine Einträge vorhanden",
+    "date": "Datum",
+    "type": "Typ",
+    "performedBy": "Durchgeführt von",
+    "terminal": "Terminal",
+    "confirmDeleteTitle": "Eintrag löschen?",
+    "confirmDeleteText": "Soll dieser Kassenbuch-Eintrag wirklich gelöscht werden? Dieser Vorgang kann nicht rückgängig gemacht werden.",
+    "errorLoading": "Fehler beim Laden des Kassenbuchs",
+    "machine": "Maschine"
   }
 }

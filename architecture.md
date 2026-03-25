@@ -31,6 +31,7 @@ cuptrack/
 │           ├── machines.js   # CRUD coffee machines
 │           ├── terminals.js  # CRUD terminals (admin)
 │           ├── terminalActions.js  # Public terminal interactions
+│           ├── cashBook.js   # Cash book (deposits, withdrawals)
 │           ├── stats.js      # Dashboard analytics
 │           └── settings.js   # Global settings (language)
 └── frontend/
@@ -55,6 +56,8 @@ cuptrack/
         │   ├── Users.tsx         # User management
         │   ├── Machines.tsx      # Machine management
         │   ├── Terminals.tsx     # Terminal management
+        │   ├── CashBook.tsx      # Cash book management
+        │   ├── Settings.tsx      # System settings (language, log cleanup)
         │   └── terminal/
         │       └── TerminalView.tsx  # Public-facing coffee terminal UI
         └── locales/
@@ -136,6 +139,9 @@ Default root login in dev: `root` / `Coffee` (configured via `ROOT_USERNAME` / `
     button1: number,
     button2: number
   },
+  alphabetFilter: {              // A-Z filter buttons on user list
+    enabled: boolean             // default: true
+  },
   createdAt: ISO timestamp,
   updatedAt: ISO timestamp
 }
@@ -145,8 +151,8 @@ Default root login in dev: `root` / `Coffee` (configured via `ROOT_USERNAME` / `
 ```
 {
   id: UUID,
-  type: 'coffee' | 'balance' | 'login',
-  userId: UUID,
+  type: 'coffee' | 'balance' | 'login' | 'cashbook' | 'anonymous_coffee' | 'balance_topup',
+  userId: UUID | null,
   machineId: UUID | null,
   terminalId: UUID | null,
   amount: number | null,
@@ -158,6 +164,48 @@ Default root login in dev: `root` / `Coffee` (configured via `ROOT_USERNAME` / `
 ```
 {
   language: 'de' | 'en'
+}
+```
+
+### Archived Stats
+```
+{
+  totalCoffees: number,          // aggregated from deleted logs
+  coffeesByUser: { [userId]: number },
+  coffeesByMachine: { [machineId]: number }
+}
+```
+Preserves statistical totals when old logs are cleaned up. The dashboard stats route merges these with current log data.
+
+### Cash Book Entry
+```
+{
+  id: UUID,
+  type: 'deposit' | 'withdrawal' | 'anonymous_coffee' | 'balance_topup',
+  amount: number,              // always positive
+  comment: string,             // user-provided (manual) or auto-generated
+  machineId: UUID | null,      // set for anonymous_coffee / balance_topup
+  terminalId: UUID | null,     // set for anonymous_coffee / balance_topup
+  performedBy: string,         // admin username or 'terminal'
+  createdAt: ISO timestamp
+}
+```
+
+Tracks physical cash flowing in and out of the office coffee fund:
+- **deposit / withdrawal** — manual entries created by an admin via the dashboard.
+- **anonymous_coffee** — auto-created when a guest uses the terminal's "Guest Coffee" button (no user account required).
+- **balance_topup** — auto-created when a user tops up their balance at a terminal or resets a negative balance to zero.
+
+The running cash balance is computed as `SUM(deposits + balance_topups + anonymous_coffees) – SUM(withdrawals)`.
+
+### Log Cleanup Record
+```
+{
+  deletedAt: ISO timestamp,
+  deletedBy: string,             // admin username
+  deletedCount: number,
+  periodFrom: ISO timestamp,     // oldest deleted log
+  periodTo: ISO timestamp        // newest deleted log
 }
 ```
 
@@ -173,7 +221,10 @@ The JSON database (`backend/data/db.json`) has these top-level collections:
   "machines": [],
   "terminals": [],
   "logs": [],
-  "settings": { "language": "de" }
+  "settings": { "language": "de" },
+  "archivedStats": { "totalCoffees": 0, "coffeesByUser": {}, "coffeesByMachine": {} },
+  "logCleanups": [],
+  "cashBook": []
 }
 ```
 
@@ -222,13 +273,23 @@ All routes are mounted under `/api`.
 | DELETE | `/:id`      | Delete terminal                  |
 
 ### Terminal Actions — `/api/terminal-actions` (Public / Session Token)
-| Method | Path                  | Auth          | Purpose                                  |
-|--------|-----------------------|---------------|------------------------------------------|
-| GET    | `/:slug`              | None          | Get terminal info + eligible user list    |
-| POST   | `/:slug/verify-pin`   | None          | PIN verification → 5min session token     |
-| POST   | `/:slug/verify-nfc`   | None          | NFC verification → 5min session token     |
-| POST   | `/:slug/count-coffee` | Session Token | Record coffee, deduct balance             |
-| POST   | `/:slug/update-balance` | Session Token | Top-up or reset balance                 |
+| Method | Path                    | Auth          | Purpose                                              |
+|--------|-------------------------|---------------|------------------------------------------------------|
+| GET    | `/:slug`                | None          | Get terminal info + eligible user list                |
+| POST   | `/:slug/verify-pin`     | None          | PIN verification → 5min session token                 |
+| POST   | `/:slug/verify-nfc`     | None          | NFC verification → 5min session token                 |
+| POST   | `/:slug/count-coffee`   | Session Token | Record coffee, deduct balance                         |
+| POST   | `/:slug/update-balance` | Session Token | Top-up or reset balance (creates cash book entry)     |
+| POST   | `/:slug/anonymous-coffee` | None        | Record guest coffee → cash book deposit + log         |
+
+### Cash Book — `/api/cashbook` (JWT + Admin)
+| Method | Path        | Purpose                                            |
+|--------|-------------|----------------------------------------------------|
+| GET    | `/`         | List all entries (newest first)                    |
+| GET    | `/balance`  | Computed running balance                           |
+| POST   | `/deposit`  | Create manual deposit (amount, comment)            |
+| POST   | `/withdrawal` | Create manual withdrawal (amount, comment)       |
+| DELETE | `/:id`      | Delete entry (only manual deposit/withdrawal)      |
 
 ### Stats — `/api/stats` (JWT + Admin)
 | Method | Path         | Purpose                                        |
@@ -236,10 +297,12 @@ All routes are mounted under `/api`.
 | GET    | `/dashboard` | Aggregated stats (today, 30-day trend, top 5)  |
 
 ### Settings — `/api/settings`
-| Method | Path | Auth      | Purpose                    |
-|--------|------|-----------|----------------------------|
-| GET    | `/`  | None      | Get global settings        |
-| PUT    | `/`  | JWT+Admin | Update settings (language)  |
+| Method | Path             | Auth      | Purpose                                    |
+|--------|------------------|-----------|--------------------------------------------|
+| GET    | `/`              | None      | Get global settings                        |
+| PUT    | `/`              | JWT+Admin | Update settings (language)                 |
+| DELETE | `/cleanup-logs`  | JWT+Admin | Delete logs older than 1 year, archive stats |
+| GET    | `/log-cleanups`  | JWT+Admin | Get log cleanup history                    |
 
 ### Health — `/api/health`
 | Method | Path | Auth | Purpose                      |
@@ -276,6 +339,8 @@ All routes are mounted under `/api`.
   /dashboard/users           → Users.tsx
   /dashboard/machines        → Machines.tsx
   /dashboard/terminals       → Terminals.tsx
+  /dashboard/cashbook        → CashBook.tsx
+  /dashboard/settings        → Settings.tsx
 /                            → Redirect to /dashboard
 ```
 
@@ -292,7 +357,11 @@ All routes are mounted under `/api`.
 - **Audit logging** — Coffee consumption, balance changes, and logins are logged to the `logs` collection.
 - **i18n** — All UI strings go through i18next. Translation files: `frontend/src/locales/{de,en}.json`. Language is server-side configurable via settings.
 - **API client** — All frontend API calls go through `frontend/src/api.ts` which auto-attaches the JWT and provides typed methods.
+- **Alphabet filter** — The terminal user list can display A-Z filter buttons so users can quickly narrow down the list by first letter. Only letters with matching users are shown. Configurable per terminal via `alphabetFilter.enabled` (default: `true`).
 - **Root user protection** — The bootstrapped root admin cannot be edited or deleted via the API.
+- **Cash book** — Tracks physical cash in the office coffee fund. Manual deposits/withdrawals are created by admins. Automatic entries are created when users top up their balance at a terminal (`balance_topup`) or when a guest uses the anonymous coffee button (`anonymous_coffee`). Admin balance edits via the dashboard do **not** create cash book entries (they are considered error corrections). Only manual entries can be deleted.
+- **Guest coffee** — Terminals offer a "Guest Coffee" button on the home screen for anonymous, account-less coffee purchases. This creates a cash book deposit entry with the machine's coffee price.
+- **Log cleanup** — Admins can manually delete logs older than one year via the Settings page. Before deletion, coffee statistics are aggregated into `archivedStats` so dashboard totals (total coffees, top drinkers, popular machines) remain accurate. Each cleanup is recorded in `logCleanups` with timestamp, admin name, count, and affected time range.
 
 ---
 

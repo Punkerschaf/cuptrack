@@ -35,7 +35,9 @@
     "dashboard": "Dashboard",
     "users": "Users",
     "machines": "Machines",
-    "terminals": "Terminals"
+    "terminals": "Terminals",
+    "settings": "Settings",
+    "cashBook": "Cash Book"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -99,7 +101,9 @@
     "quickButtons": "Quick Top-Up",
     "quickButtonsEnabled": "Enable quick top-up buttons",
     "quickButton1": "Amount Button 1 (€)",
-    "quickButton2": "Amount Button 2 (€)"
+    "quickButton2": "Amount Button 2 (€)",
+    "alphabetFilter": "Alphabet Filter",
+    "alphabetFilterEnabled": "Enable alphabet filter in user list"
   },
   "terminalView": {
     "selectName": "Select your name:",
@@ -119,6 +123,8 @@
     "newBalance": "New balance:",
     "balanceUpdated": "Balance updated!",
     "backToStart": "Returning to start in a few seconds...",
+    "guestCoffee": "Guest Coffee",
+    "guestCoffeeSuccess": "Guest coffee recorded! ({{price}} €)",
     "currentBalance": "Current balance: {{balance}} €",
     "addAmountLabel": "Amount to add (€)",
     "addBalance": "add",
@@ -132,11 +138,50 @@
     "balance": "Balance changed",
     "login": "Login",
     "userCreated": "User created",
-    "userDeleted": "User deleted"
+    "userDeleted": "User deleted",
+    "cashbook": "Cash Book",
+    "anonymousCoffee": "Guest Coffee",
+    "balanceTopUp": "Balance top-up (Cash Book)"
   },
   "settings": {
+    "title": "System Settings",
     "language": "Language",
     "german": "Deutsch",
-    "english": "English"
+    "english": "English",
+    "logCleanup": "Log Cleanup",
+    "logCleanupDescription": "Deletes all logs older than one year. Statistics (total coffees, top drinkers, popular machines) will remain unaffected.",
+    "deleteOldLogs": "Delete old logs (> 1 year)",
+    "noOldLogs": "No logs older than one year found.",
+    "logsDeleted": "{{count}} logs deleted (period: {{from}} – {{to}}).",
+    "cleanupError": "Error deleting logs.",
+    "confirmCleanupTitle": "Really delete logs?",
+    "confirmCleanupText": "All logs older than one year will be permanently deleted. Statistics will be preserved. This action cannot be undone.",
+    "cleanupHistory": "Cleanup History",
+    "cleanupDate": "Date",
+    "cleanupBy": "Performed by",
+    "cleanupCount": "Deleted Logs",
+    "cleanupPeriod": "Period"
+  },
+  "cashBook": {
+    "title": "Cash Book",
+    "balance": "Current Balance",
+    "deposit": "Deposit",
+    "withdrawal": "Withdrawal",
+    "anonymousCoffee": "Guest Coffee",
+    "amount": "Amount",
+    "amountLabel": "Amount (€)",
+    "comment": "Comment",
+    "newDeposit": "New Deposit",
+    "newWithdrawal": "New Withdrawal",
+    "newTransaction": "New Transaction",
+    "noEntries": "No entries yet",
+    "date": "Date",
+    "type": "Type",
+    "performedBy": "Performed by",
+    "terminal": "Terminal",
+    "confirmDeleteTitle": "Delete entry?",
+    "confirmDeleteText": "Do you really want to delete this cash book entry? This action cannot be undone.",
+    "errorLoading": "Error loading cash book",
+    "machine": "Machine"
   }
 }

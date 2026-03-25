@@ -14,8 +14,6 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
-  MenuItem,
-  Select,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -23,7 +21,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import CoffeeMakerIcon from '@mui/icons-material/CoffeeMaker';
 import TabletIcon from '@mui/icons-material/Tablet';
 import LogoutIcon from '@mui/icons-material/Logout';
-import LanguageIcon from '@mui/icons-material/Language';
+import SettingsIcon from '@mui/icons-material/Settings';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -56,6 +55,8 @@ export default function DashboardLayout() {
       path: '/dashboard/machines',
     },
     { text: t('nav.terminals'), icon: <TabletIcon />, path: '/dashboard/terminals' },
+    { text: t('nav.cashBook'), icon: <AccountBalanceWalletIcon />, path: '/dashboard/cashbook' },
+    { text: t('nav.settings'), icon: <SettingsIcon />, path: '/dashboard/settings' },
   ];
 
   const handleLogout = () => {
@@ -63,14 +64,6 @@ export default function DashboardLayout() {
     navigate('/login');
   };
 
-  const handleLanguageChange = async (lang: string) => {
-    try {
-      await api.updateSettings({ language: lang });
-      i18n.changeLanguage(lang);
-    } catch {
-      // silently fail
-    }
-  };
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -127,32 +120,6 @@ export default function DashboardLayout() {
           </ListItemButton>
         ))}
       </List>
-      <Divider />
-      {/* Language Selector */}
-      {open && (
-        <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LanguageIcon fontSize="small" color="action" />
-          <Select
-            size="small"
-            value={i18n.language}
-            onChange={(e) => handleLanguageChange(e.target.value)}
-            sx={{ flex: 1, fontSize: '0.875rem' }}
-          >
-            <MenuItem value="de">{t('settings.german')}</MenuItem>
-            <MenuItem value="en">{t('settings.english')}</MenuItem>
-          </Select>
-        </Box>
-      )}
-      {!open && (
-        <Box sx={{ textAlign: 'center', py: 1 }}>
-          <IconButton
-            size="small"
-            onClick={() => handleLanguageChange(i18n.language === 'de' ? 'en' : 'de')}
-          >
-            <LanguageIcon />
-          </IconButton>
-        </Box>
-      )}
       <Divider />
       <List>
         <ListItemButton

@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Machines from './pages/Machines';
 import Terminals from './pages/Terminals';
+import Settings from './pages/Settings';
+import CashBook from './pages/CashBook';
 import TerminalView from './pages/terminal/TerminalView';
 
 export default function App() {
@@ -27,6 +29,8 @@ export default function App() {
           <Route path="users" element={<Users />} />
           <Route path="machines" element={<Machines />} />
           <Route path="terminals" element={<Terminals />} />
+          <Route path="cashbook" element={<CashBook />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

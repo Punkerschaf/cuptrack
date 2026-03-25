@@ -372,6 +372,7 @@ function EditTerminalDialog({
     name: terminal.name,
     machineId: terminal.machineId,
     quickButtons: terminal.quickButtons || { enabled: false, button1: 5, button2: 10 },
+    alphabetFilter: terminal.alphabetFilter || { enabled: true },
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -490,6 +491,26 @@ function EditTerminalDialog({
               />
             </Box>
           )}
+        </Box>
+
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            {t('terminals.alphabetFilter')}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.alphabetFilter.enabled}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    alphabetFilter: { enabled: e.target.checked },
+                  })
+                }
+              />
+            }
+            label={t('terminals.alphabetFilterEnabled')}
+          />
         </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between' }}>

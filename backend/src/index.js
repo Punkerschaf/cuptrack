@@ -12,6 +12,7 @@ import terminalRoutes from './routes/terminals.js';
 import terminalActionRoutes from './routes/terminalActions.js';
 import statsRoutes from './routes/stats.js';
 import settingsRoutes from './routes/settings.js';
+import cashBookRoutes from './routes/cashBook.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const version = JSON.parse(
@@ -39,6 +40,7 @@ app.use('/api/terminals', terminalRoutes);
 app.use('/api/terminal-actions', terminalActionRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/cashbook', cashBookRoutes);
 
 // Serve frontend build in production
 const frontendDist = join(__dirname, '..', '..', 'frontend', 'dist');

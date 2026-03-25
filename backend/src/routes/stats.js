@@ -8,9 +8,10 @@ router.use(authenticateToken, requireAdmin);
 router.get('/dashboard', (req, res) => {
   const now = new Date();
   const coffeeLogs = db.data.logs.filter(l => l.type === 'coffee');
+  const archived = db.data.archivedStats || { totalCoffees: 0, coffeesByUser: {}, coffeesByMachine: {} };
 
-  // Total coffees
-  const totalCoffees = coffeeLogs.length;
+  // Total coffees (current + archived)
+  const totalCoffees = coffeeLogs.length + archived.totalCoffees;
 
   // Coffees today
   const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -28,8 +29,8 @@ router.get('/dashboard', (req, res) => {
     coffeesPerDay.push({ date: dayStr, count });
   }
 
-  // Top drinkers
-  const drinkerCounts = {};
+  // Top drinkers (current + archived)
+  const drinkerCounts = { ...archived.coffeesByUser };
   coffeeLogs.forEach(l => {
     drinkerCounts[l.userId] = (drinkerCounts[l.userId] || 0) + 1;
   });
@@ -41,8 +42,8 @@ router.get('/dashboard', (req, res) => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  // Popular machines
-  const machineCounts = {};
+  // Popular machines (current + archived)
+  const machineCounts = { ...archived.coffeesByMachine };
   coffeeLogs.forEach(l => {
     if (l.machineId) machineCounts[l.machineId] = (machineCounts[l.machineId] || 0) + 1;
   });
