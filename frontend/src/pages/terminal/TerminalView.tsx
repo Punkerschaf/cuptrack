@@ -11,13 +11,11 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  InputAdornment,
 } from '@mui/material';
 import LocalCafeIcon from '@mui/icons-material/LocalCafe';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BackspaceIcon from '@mui/icons-material/Backspace';
-import SearchIcon from '@mui/icons-material/Search';
 import NfcIcon from '@mui/icons-material/Nfc';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +49,6 @@ export default function TerminalView() {
   const [sessionToken, setSessionToken] = useState('');
   const [balance, setBalance] = useState(0);
   const [newBalance, setNewBalance] = useState('');
-  const [userSearch, setUserSearch] = useState('');
   const [alphabetFilter, setAlphabetFilter] = useState<string | null>(null);
   const [nfcScanning, setNfcScanning] = useState(false);
   const [nfcStatus, setNfcStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
@@ -101,7 +98,6 @@ export default function TerminalView() {
     setSessionToken('');
     setBalance(0);
     setNewBalance('');
-    setUserSearch('');
     setAlphabetFilter(null);
     setNfcScanning(false);
     setNfcStatus('idle');
@@ -295,21 +291,21 @@ export default function TerminalView() {
       : [];
 
     const filteredUsers = info.users.filter((u) => {
-      const matchesSearch = u.displayName
-        .toLowerCase()
-        .includes(userSearch.toLowerCase());
-      const matchesLetter =
-        !alphabetFilter ||
-        u.displayName.charAt(0).toUpperCase() === alphabetFilter;
-      return matchesSearch && matchesLetter;
+      return !alphabetFilter || u.displayName.charAt(0).toUpperCase() === alphabetFilter;
     });
 
     return (
       <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
-        <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <LocalCafeIcon sx={{ fontSize: 48, color: '#6F4E37' }} />
+        <Box sx={{ textAlign: 'center', mb: 1, flexShrink: 0 }}>
+          <LocalCafeIcon
+            sx={{
+              fontSize: 48,
+              color: '#6F4E37',
+              '@media (max-height: 700px)': { display: 'none' },
+            }}
+          />
           {info.machine && (
-            <>
+            <Box sx={{ '@media (max-height: 580px)': { display: 'none' } }}>
               <Typography variant="h4" fontWeight={700} color="#6F4E37">
                 {info.machine.name}
               </Typography>
@@ -318,16 +314,16 @@ export default function TerminalView() {
                   {info.machine.room}
                 </Typography>
               )}
-            </>
+            </Box>
           )}
         </Box>
 
-        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ textAlign: 'center', flexShrink: 0 }}>
           {t('terminalView.selectName')}
         </Typography>
 
         {nfcSupported && (
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
+          <Box sx={{ textAlign: 'center', mb: 2, flexShrink: 0 }}>
             <Button
               variant={nfcScanning ? 'outlined' : 'contained'}
               startIcon={<NfcIcon />}
@@ -360,24 +356,6 @@ export default function TerminalView() {
           </Box>
         )}
 
-        {info.users.length > 8 && (
-          <TextField
-            size="small"
-            placeholder={t('common.search')}
-            value={userSearch}
-            onChange={(e) => setUserSearch(e.target.value)}
-            fullWidth
-            sx={{ mb: 1 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        )}
-
         {alphabetFilterEnabled && availableLetters.length > 1 && (
           <Box
             sx={{
@@ -386,6 +364,7 @@ export default function TerminalView() {
               gap: 0.5,
               justifyContent: 'center',
               mb: 1,
+              flexShrink: 0,
             }}
           >
             <Button
@@ -440,7 +419,8 @@ export default function TerminalView() {
 
         <Paper
           sx={{
-            maxHeight: 400,
+            flex: 1,
+            minHeight: 144,
             overflow: 'auto',
             border: '1px solid',
             borderColor: 'divider',
@@ -470,7 +450,7 @@ export default function TerminalView() {
         </Paper>
 
         {/* Guest Coffee Button */}
-        <Box sx={{ textAlign: 'center', mt: 3 }}>
+        <Box sx={{ textAlign: 'center', mt: 2, flexShrink: 0 }}>
           <Button
             variant="outlined"
             size="large"
@@ -565,8 +545,8 @@ export default function TerminalView() {
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 1.5,
-            maxWidth: 300,
             mx: 'auto',
+            width: '100%',
           }}
         >
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'back'].map(
@@ -942,15 +922,16 @@ function TerminalWrapper({ children, codeName, terminalName, connected = true }:
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        height: '100dvh',
         backgroundColor: '#FAF6F1',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'center',
-        pt: { xs: 2, sm: 4 },
+        pt: { xs: 1, sm: 2 },
         px: 2,
-        pb: 2,
+        pb: 1,
+        overflow: 'hidden',
       }}
     >
       <Paper
@@ -958,17 +939,41 @@ function TerminalWrapper({ children, codeName, terminalName, connected = true }:
         sx={{
           maxWidth: 480,
           width: '100%',
-          p: { xs: 2, sm: 4 },
+          p: { xs: 2, sm: 3 },
           borderRadius: 3,
           flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          minHeight: 0,
         }}
       >
         {children}
       </Paper>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, mt: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0.5,
+          mt: 1,
+          flexShrink: 0,
+          '@media (max-height: 480px)': {
+            display: 'none',
+          },
+        }}
+      >
         <ConnectionIndicator connected={connected} />
         {terminalName && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              '@media (max-height: 580px)': {
+                display: 'none',
+              },
+            }}
+          >
             {terminalName}
           </Typography>
         )}
