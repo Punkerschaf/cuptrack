@@ -184,5 +184,18 @@
     "confirmDeleteText": "Do you really want to delete this cash book entry? This action cannot be undone.",
     "errorLoading": "Error loading cash book",
     "machine": "Machine"
+  },
+  "migrations": {
+    "bannerTitle": "Database migration required",
+    "bannerText": "{{count}} manual migration(s) pending. Some features are restricted until the migration is completed.",
+    "runMigration": "Run migration",
+    "dialogTitle": "Database Migration",
+    "version": "Version",
+    "breakingChanges": "Breaking changes",
+    "adminAction": "Action required",
+    "confirm": "Run migration now",
+    "running": "Migration running...",
+    "success": "Migration completed successfully.",
+    "error": "Migration failed"
   }
 }
