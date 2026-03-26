@@ -24,7 +24,10 @@ export const updateUserSchema = z.object({
     id: z.string(),
     type: z.string(),
     value: z.string(),
-  })).optional(),
+  }).refine(
+    (ident) => ident.type !== 'pin' || /^[0-9]{4}$/.test(ident.value),
+    { message: 'PIN muss genau 4 Ziffern haben' }
+  )).optional(),
 });
 
 // ─── Machines ───────────────────────────────────────────────

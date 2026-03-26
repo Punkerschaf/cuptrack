@@ -548,9 +548,21 @@ function EditUserDialog({
                 <TextField
                   size="small"
                   value={ident.value}
-                  onChange={(e) => updateIdentifier(idx, e.target.value)}
+                  onChange={(e) => {
+                    if (ident.type === 'pin') {
+                      const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                      updateIdentifier(idx, v);
+                    } else {
+                      updateIdentifier(idx, e.target.value);
+                    }
+                  }}
                   placeholder={ident.type === 'kaba_nfc' ? '01:23:45:67:89:AB:CD' : ''}
                   sx={{ flex: 1 }}
+                  {...(ident.type === 'pin' && {
+                    inputProps: { inputMode: 'numeric', pattern: '[0-9]{4}', maxLength: 4 },
+                    error: ident.value.length > 0 && ident.value.length < 4,
+                    helperText: ident.value.length > 0 && ident.value.length < 4 ? t('users.pinMustBe4Digits') : '',
+                  })}
                 />
                 <IconButton
                   size="small"
