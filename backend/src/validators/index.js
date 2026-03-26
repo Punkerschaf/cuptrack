@@ -14,6 +14,7 @@ export const createUserSchema = z.object({
   displayName: z.string().min(1, 'Anzeigename erforderlich'),
   password: z.string().min(1).optional(),
   type: z.enum(['admin', 'api', 'drinker'], { message: 'Ungültiger Benutzertyp' }),
+  pin: z.string().regex(/^[0-9]{4}$/, 'PIN muss genau 4 Ziffern haben').optional(),
 });
 
 export const updateUserSchema = z.object({

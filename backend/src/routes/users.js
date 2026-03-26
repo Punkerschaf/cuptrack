@@ -29,7 +29,7 @@ router.get('/:id/log', (req, res) => {
 // Create user
 router.post('/', async (req, res, next) => {
   try {
-    const { username, displayName, password, type } = createUserSchema.parse(req.body);
+    const { username, displayName, password, type, pin: providedPin } = createUserSchema.parse(req.body);
 
     if (type !== 'api' && !password) {
       return res.status(400).json({ error: 'Passwort erforderlich für diesen Benutzertyp' });
@@ -40,12 +40,19 @@ router.post('/', async (req, res, next) => {
 
     const identifiers = [];
 
-    // Auto-generate a unique PIN for drinkers
+    // Use provided PIN or auto-generate a unique one for drinkers
     if (type === 'drinker') {
       let pin;
-      do {
-        pin = String(Math.floor(1000 + Math.random() * 9000));
-      } while (users.pinExists(pin));
+      if (providedPin) {
+        if (users.pinExists(providedPin)) {
+          return res.status(409).json({ error: 'PIN wird bereits verwendet' });
+        }
+        pin = providedPin;
+      } else {
+        do {
+          pin = String(Math.floor(1000 + Math.random() * 9000));
+        } while (users.pinExists(pin));
+      }
       identifiers.push({ id: uuidv4(), type: 'pin', value: pin });
     }
 
