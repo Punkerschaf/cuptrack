@@ -94,3 +94,11 @@ CREATE TABLE IF NOT EXISTS log_cleanups (
   periodFrom TEXT NOT NULL,
   periodTo TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('auto', 'manual')),
+  executedAt TEXT NOT NULL,
+  executedBy TEXT NOT NULL DEFAULT 'system'
+);

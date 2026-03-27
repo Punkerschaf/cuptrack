@@ -87,3 +87,28 @@ export interface CashBookEntry {
   performedBy: string;
   createdAt: string;
 }
+
+export interface PendingMigration {
+  version: number;
+  name: string;
+  type: 'auto' | 'manual';
+  description: string;
+  breaking: string[] | null;
+  adminAction: string | null;
+  params: { key: string; label: string; type: string; default?: unknown }[] | null;
+}
+
+export interface AppliedMigration {
+  version: number;
+  name: string;
+  type: 'auto' | 'manual';
+  executedAt: string;
+  executedBy: string;
+}
+
+export interface MigrationStatus {
+  currentVersion: number;
+  maintenanceMode: boolean;
+  applied: AppliedMigration[];
+  pending: PendingMigration[];
+}

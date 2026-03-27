@@ -6,7 +6,7 @@
 
 CupTrack is a digital coffee fund for shared office coffee machines. It tracks which user has consumed how many coffees and deducts the corresponding price from their prepaid balance. CupTrack does **not** control the machines — it relies on user honesty, like a physical coffee fund.
 
-**Version**: 0.2.0 "Cold Coffee" (defined in `/version.json`)
+**Version**: 0.3.0 "Cold Coffee" (defined in `/version.json`)
 
 ---
 
@@ -15,25 +15,43 @@ CupTrack is a digital coffee fund for shared office coffee machines. It tracks w
 ```
 cuptrack/
 ├── package.json              # Root: concurrently runs backend + frontend
-├── version.json              # App version (major/minor/patch/codeName)
+├── version.json              # App version (major/minor/patch/codeName/schemaVersion)
 ├── backend/
 │   ├── package.json
-│   ├── data/db.json          # Runtime JSON database (lowdb, gitignored)
+│   ├── data/cuptrack.db      # SQLite database (gitignored)
 │   └── src/
-│       ├── index.js          # Express entry point, route mounting
+│       ├── index.js          # Express entry point, route mounting, server start
 │       ├── config.js         # Env-based configuration
-│       ├── db.js             # lowdb setup + root user bootstrap
+│       ├── db.js             # SQLite setup, schema init, root user bootstrap, migration init
+│       ├── dal.js            # Data Access Layer (prepared statements for all CRUD)
+│       ├── schema.sql        # Full database schema (CREATE TABLE IF NOT EXISTS)
 │       ├── middleware/
-│       │   └── auth.js       # JWT verification + admin guard
-│       └── routes/
-│           ├── auth.js       # Login, /me
-│           ├── users.js      # CRUD users, identifiers, balance
-│           ├── machines.js   # CRUD coffee machines
-│           ├── terminals.js  # CRUD terminals (admin)
-│           ├── terminalActions.js  # Public terminal interactions
-│           ├── cashBook.js   # Cash book (deposits, withdrawals)
-│           ├── stats.js      # Dashboard analytics
-│           └── settings.js   # Global settings (language)
+│       │   ├── auth.js           # JWT verification + admin guard
+│       │   ├── maintenance.js    # Maintenance mode guard (blocks non-admin during migrations)
+│       │   ├── error-handler.js  # Central error handler
+│       │   └── request-logger.js # Pino request logging
+│       ├── routes/
+│       │   ├── auth.js           # Login, /me
+│       │   ├── users.js          # CRUD users, identifiers, balance
+│       │   ├── machines.js       # CRUD coffee machines
+│       │   ├── terminals.js      # CRUD terminals (admin)
+│       │   ├── terminalActions.js # Public terminal interactions
+│       │   ├── cashBook.js       # Cash book (deposits, withdrawals)
+│       │   ├── stats.js          # Dashboard analytics
+│       │   ├── settings.js       # Global settings (language, log cleanup)
+│       │   └── migrations.js     # Admin migration API
+│       ├── validators/
+│       │   └── index.js          # Zod validation schemas for all request bodies
+│       └── migrations/
+│           ├── runner.js         # Migration engine (auto + manual migrations)
+│           ├── cli.js            # CLI tool for migration status/run/backup
+│           └── scripts/
+│               └── 001-baseline.js  # Baseline migration (version 1)
+├── docs/
+│   ├── api.md
+│   ├── migration.md          # Migration system documentation
+│   ├── deployment-docker.md
+│   └── deployment-raspi.md
 └── frontend/
     ├── package.json
     ├── vite.config.ts
@@ -69,16 +87,18 @@ cuptrack/
 
 ## Tech Stack
 
-| Layer    | Technology                                          |
-|----------|-----------------------------------------------------|
-| Backend  | Node.js, Express, ESM                               |
-| Database | lowdb v7 (JSON file at `backend/data/db.json`)      |
-| Auth     | JWT (jsonwebtoken), bcryptjs for password hashing    |
-| Frontend | React 18, TypeScript, Vite 6                        |
-| UI       | Material-UI (MUI) v5, Emotion                       |
-| Charts   | Recharts                                            |
-| i18n     | i18next + react-i18next (German default, English)   |
-| Dev      | concurrently (runs backend + frontend in parallel)   |
+| Layer    | Technology                                                |
+|----------|-----------------------------------------------------------|
+| Backend  | Node.js, Express, ESM                                     |
+| Database | SQLite via better-sqlite3 (WAL mode, foreign keys enabled)|
+| Auth     | JWT (jsonwebtoken), bcryptjs for password hashing          |
+| Frontend | React 18, TypeScript, Vite 6                               |
+| UI       | Material-UI (MUI) v5, Emotion                              |
+| Charts   | Recharts                                                   |
+| i18n     | i18next + react-i18next (German default, English)          |
+| Validation | Zod (backend request body validation)                    |
+| Logging  | Pino (structured JSON logging)                             |
+| Dev      | concurrently (runs backend + frontend in parallel)         |
 
 ---
 
@@ -211,24 +231,47 @@ The running cash balance is computed as `SUM(deposits + balance_topups + anonymo
 
 ---
 
-## Database Schema (lowdb)
+## Database Schema (SQLite)
 
-The JSON database (`backend/data/db.json`) has these top-level collections:
+The database file is `backend/data/cuptrack.db` (SQLite, WAL mode, foreign keys enabled). The full schema is defined in `backend/src/schema.sql` using `CREATE TABLE IF NOT EXISTS`.
 
-```json
-{
-  "users": [],
-  "machines": [],
-  "terminals": [],
-  "logs": [],
-  "settings": { "language": "de" },
-  "archivedStats": { "totalCoffees": 0, "coffeesByUser": {}, "coffeesByMachine": {} },
-  "logCleanups": [],
-  "cashBook": []
-}
-```
+### Tables
 
-On first start, the backend bootstraps a root admin user from env vars (`ROOT_USERNAME` / `ROOT_PASSWORD`, defaults: `root` / `Coffee`).
+| Table               | Purpose                                                    |
+|---------------------|------------------------------------------------------------|
+| `users`             | Admin, API and drinker accounts (UUID PK)                  |
+| `identifiers`       | PIN/RFID/NFC/QR/Kaba credentials linked to users (FK)     |
+| `machines`          | Coffee machines with room + price                          |
+| `terminals`         | Web/API terminals linked to a machine (FK), with settings  |
+| `logs`              | Audit log (coffee, balance, login, cashbook, etc.)         |
+| `cash_book`         | Cash flow tracking (deposits, withdrawals, auto entries)   |
+| `settings`          | Global settings (key/value, e.g. `language`)               |
+| `archived_stats`    | Preserved statistics after log cleanup                     |
+| `log_cleanups`      | History of admin-triggered log cleanup operations          |
+| `schema_migrations` | Migration tracking (version, name, type, executedAt)       |
+
+### Key Constraints
+- Foreign keys: `identifiers.userId → users.id`, `terminals.machineId → machines.id`, etc.
+- `users.type` CHECK: `'admin'`, `'api'`, `'drinker'`
+- `identifiers.type` CHECK: `'pin'`, `'rfid'`, `'nfc'`, `'qr'`, `'kaba_nfc'`
+- Terminal settings (`quickButtons*`, `alphabetFilter`) stored as columns with defaults
+
+On first start, the backend executes `schema.sql`, then bootstraps a root admin user from env vars (`ROOT_USERNAME` / `ROOT_PASSWORD`, defaults: `root` / `Coffee`).
+
+---
+
+## Database Migrations
+
+CupTrack uses a custom migration system (no external package). See [`docs/migration.md`](docs/migration.md) for full details.
+
+### Key Concepts
+- **Migration scripts** live in `backend/src/migrations/scripts/NNN-name.js` (linear integer versioning)
+- **Auto migrations**: Backward-compatible changes, run automatically on server start
+- **Manual migrations**: Breaking changes requiring admin confirmation via the dashboard
+- **Maintenance mode**: When manual migrations are pending, only auth and migration API routes are accessible
+- **Backups**: Created automatically before each migration via `better-sqlite3`'s native `backup()` API (max 5 kept)
+- **Schema version**: Tracked in `version.json` (`schemaVersion` field) and in the `schema_migrations` table
+- **CLI**: `node backend/src/migrations/cli.js status|run|backup` for headless deployments (e.g. Raspberry Pi)
 
 ---
 
@@ -309,6 +352,12 @@ All routes are mounted under `/api`.
 |--------|------|------|------------------------------|
 | GET    | `/`  | None | Returns version info         |
 
+### Migrations — `/api/admin/migrations` (JWT + Admin)
+| Method | Path   | Auth       | Purpose                                        |
+|--------|--------|------------|------------------------------------------------|
+| GET    | `/`    | JWT+Admin  | Get migration status (current version, pending)|
+| POST   | `/run` | JWT+Root   | Execute a single manual migration              |
+
 ---
 
 ## Authentication Flows
@@ -351,7 +400,7 @@ All routes are mounted under `/api`.
 ## Key Patterns & Conventions
 
 - **ESM throughout** — Backend uses ES modules (`import/export`), configured via `"type": "module"` in backend/package.json.
-- **No ORM** — Data access is direct via `db.data.users`, `db.data.machines`, etc. (lowdb). Mutations are followed by `await db.write()`.
+- **Data Access Layer** — All database access goes through `backend/src/dal.js` using prepared statements (better-sqlite3). No raw SQL in route handlers.
 - **UUID for IDs** — All entities use `uuid` v4 for primary keys.
 - **Slug-based terminal access** — Terminals are accessed publicly by auto-generated slug (from name), not by ID.
 - **Audit logging** — Coffee consumption, balance changes, and logins are logged to the `logs` collection.
@@ -361,7 +410,8 @@ All routes are mounted under `/api`.
 - **Root user protection** — The bootstrapped root admin cannot be edited or deleted via the API.
 - **Cash book** — Tracks physical cash in the office coffee fund. Manual deposits/withdrawals are created by admins. Automatic entries are created when users top up their balance at a terminal (`balance_topup`) or when a guest uses the anonymous coffee button (`anonymous_coffee`). Admin balance edits via the dashboard do **not** create cash book entries (they are considered error corrections). Only manual entries can be deleted.
 - **Guest coffee** — Terminals offer a "Guest Coffee" button on the home screen for anonymous, account-less coffee purchases. This creates a cash book deposit entry with the machine's coffee price.
-- **Log cleanup** — Admins can manually delete logs older than one year via the Settings page. Before deletion, coffee statistics are aggregated into `archivedStats` so dashboard totals (total coffees, top drinkers, popular machines) remain accurate. Each cleanup is recorded in `logCleanups` with timestamp, admin name, count, and affected time range.
+- **Log cleanup** — Admins can manually delete logs older than one year via the Settings page. Before deletion, coffee statistics are aggregated into `archived_stats` so dashboard totals (total coffees, top drinkers, popular machines) remain accurate. Each cleanup is recorded in `log_cleanups` with timestamp, admin name, count, and affected time range.
+- **Maintenance mode** — When manual database migrations are pending, the `maintenance` middleware blocks all non-essential routes (only auth, migrations, and health remain accessible). The admin sees a banner in the dashboard with migration details and a confirmation dialog.
 
 ---
 
@@ -373,3 +423,6 @@ All routes are mounted under `/api`.
 | `JWT_SECRET`     | `cuptrack-dev-secret-change-in-production`   | JWT signing key      |
 | `ROOT_USERNAME`  | `root`                                       | Initial admin user   |
 | `ROOT_PASSWORD`  | `Coffee`                                     | Initial admin pass   |
+| `NODE_ENV`       | (unset)                                      | `production` in Docker |
+| `CORS_ORIGIN`    | (unset)                                      | Allowed CORS origin  |
+| `LOG_LEVEL`      | `info`                                       | Pino log level       |

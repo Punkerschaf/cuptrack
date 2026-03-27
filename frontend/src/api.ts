@@ -1,4 +1,4 @@
-import type { User, Machine, Terminal, LogEntry, DashboardStats, TerminalInfo, CashBookEntry } from './types';
+import type { User, Machine, Terminal, LogEntry, DashboardStats, TerminalInfo, CashBookEntry, MigrationStatus } from './types';
 
 const BASE = '/api';
 
@@ -161,4 +161,19 @@ export const api = {
       `/terminal-actions/${encodeURIComponent(slug)}/anonymous-coffee`,
       { method: 'POST' },
     ),
+
+  // Migrations
+  getMigrationStatus: () => request<MigrationStatus>('/admin/migrations'),
+  runMigration: (version: number, confirm: boolean, params?: Record<string, unknown>) =>
+    request<{
+      success: boolean;
+      version: number;
+      name: string;
+      backupPath: string;
+      maintenanceMode: boolean;
+      remainingPending: MigrationStatus['pending'];
+    }>('/admin/migrations/run', {
+      method: 'POST',
+      body: JSON.stringify({ version, confirm, params }),
+    }),
 };

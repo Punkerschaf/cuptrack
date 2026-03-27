@@ -14,6 +14,14 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  Alert,
+  AlertTitle,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -24,9 +32,11 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
+import type { MigrationStatus, PendingMigration } from '../types';
 
 const DRAWER_WIDTH = 240;
 const DRAWER_WIDTH_COLLAPSED = 64;
@@ -38,13 +48,44 @@ export default function DashboardLayout() {
   const [open, setOpen] = useState(!isMobile);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [versionInfo, setVersionInfo] = useState<{ version: string; codeName: string } | null>(null);
+  const [migrationStatus, setMigrationStatus] = useState<MigrationStatus | null>(null);
+  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false);
+  const [selectedMigration, setSelectedMigration] = useState<PendingMigration | null>(null);
+  const [migrationRunning, setMigrationRunning] = useState(false);
+  const [migrationError, setMigrationError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
 
   useEffect(() => {
     api.getVersion().then((v) => setVersionInfo({ version: v.version, codeName: v.codeName })).catch(() => {});
+    api.getMigrationStatus().then(setMigrationStatus).catch(() => {});
   }, []);
+
+  const pendingManual = migrationStatus?.pending.filter(m => m.type === 'manual') ?? [];
+
+  const handleRunMigration = async () => {
+    if (!selectedMigration) return;
+    setMigrationRunning(true);
+    setMigrationError(null);
+    try {
+      const result = await api.runMigration(selectedMigration.version, true);
+      if (result.success) {
+        setMigrationDialogOpen(false);
+        setSelectedMigration(null);
+        // Refresh status
+        const status = await api.getMigrationStatus();
+        setMigrationStatus(status);
+        if (!status.maintenanceMode) {
+          window.location.reload();
+        }
+      }
+    } catch (err) {
+      setMigrationError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setMigrationRunning(false);
+    }
+  };
 
   const menuItems = [
     { text: t('nav.dashboard'), icon: <DashboardIcon />, path: '/dashboard' },
@@ -227,7 +268,81 @@ export default function DashboardLayout() {
             />
           </Box>
         )}
+        {pendingManual.length > 0 && (
+          <Alert
+            severity="warning"
+            icon={<WarningAmberIcon />}
+            sx={{ mb: 2 }}
+            action={
+              user?.isRoot ? (
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => { setSelectedMigration(pendingManual[0]); setMigrationDialogOpen(true); }}
+                >
+                  {t('migrations.runMigration')}
+                </Button>
+              ) : undefined
+            }
+          >
+            <AlertTitle>{t('migrations.bannerTitle')}</AlertTitle>
+            {t('migrations.bannerText', { count: pendingManual.length })}
+          </Alert>
+        )}
         <Outlet />
+
+        {/* Migration Dialog */}
+        <Dialog open={migrationDialogOpen} onClose={() => !migrationRunning && setMigrationDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>{t('migrations.dialogTitle')}</DialogTitle>
+          <DialogContent>
+            {selectedMigration && (
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  {t('migrations.version')} {selectedMigration.version}: {selectedMigration.name}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  {selectedMigration.description}
+                </Typography>
+                {selectedMigration.breaking && selectedMigration.breaking.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="error" gutterBottom>
+                      {t('migrations.breakingChanges')}
+                    </Typography>
+                    <ul style={{ margin: 0, paddingLeft: 20 }}>
+                      {selectedMigration.breaking.map((b, i) => (
+                        <li key={i}><Typography variant="body2">{b}</Typography></li>
+                      ))}
+                    </ul>
+                  </Box>
+                )}
+                {selectedMigration.adminAction && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <AlertTitle>{t('migrations.adminAction')}</AlertTitle>
+                    {selectedMigration.adminAction}
+                  </Alert>
+                )}
+                {migrationError && (
+                  <Alert severity="error" sx={{ mt: 2 }}>{migrationError}</Alert>
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setMigrationDialogOpen(false)} disabled={migrationRunning}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleRunMigration}
+              variant="contained"
+              color="warning"
+              disabled={migrationRunning}
+              startIcon={migrationRunning ? <CircularProgress size={16} /> : undefined}
+            >
+              {migrationRunning ? t('migrations.running') : t('migrations.confirm')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         {versionInfo && (
           <Box sx={{ textAlign: 'center', mt: 'auto', pt: 4, pb: 2 }}>
             <Typography variant="caption" color="text.secondary">

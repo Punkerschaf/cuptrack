@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync } from 'fs';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import config from './config.js';
+import { runMigrations, getStatus } from './migrations/runner.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(__dirname, '..', 'data');
@@ -43,6 +44,49 @@ if (!rootExists) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(uuidv4(), config.rootUsername, 'Root Admin', hashedPassword, 'admin', 1, 0, null, now, now);
   console.log('Root-Benutzer erstellt.');
+}
+
+// Migration state — set after initMigrations() is called
+let maintenanceMode = false;
+let pendingManualMigrations = null;
+
+/**
+ * Run pending migrations. Must be called before starting the server.
+ * Sets maintenanceMode if manual migrations are pending.
+ */
+export async function initMigrations(logger = console) {
+  const result = await runMigrations(db, logger);
+
+  if (!result.success) {
+    const msg = `FATAL: Database migration failed: ${result.error}`;
+    if (result.backupPath) {
+      logger.error(`${msg}\nBackup available at: ${result.backupPath}`);
+    } else {
+      logger.error(msg);
+    }
+    process.exit(1);
+  }
+
+  if (result.pendingManual && result.pendingManual.length > 0) {
+    maintenanceMode = true;
+    pendingManualMigrations = result.pendingManual;
+    logger.warn(`Maintenance mode: ${result.pendingManual.length} manual migration(s) pending.`);
+  }
+
+  return result;
+}
+
+export function isMaintenanceMode() {
+  return maintenanceMode;
+}
+
+export function getPendingManualMigrations() {
+  return pendingManualMigrations;
+}
+
+export function exitMaintenanceMode() {
+  maintenanceMode = false;
+  pendingManualMigrations = null;
 }
 
 // Graceful shutdown

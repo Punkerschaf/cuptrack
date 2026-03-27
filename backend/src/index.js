@@ -7,9 +7,10 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
 import config from './config.js';
-import './db.js';
+import { initMigrations } from './db.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { maintenanceGuard } from './middleware/maintenance.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import machineRoutes from './routes/machines.js';
@@ -18,6 +19,7 @@ import terminalActionRoutes from './routes/terminalActions.js';
 import statsRoutes from './routes/stats.js';
 import settingsRoutes from './routes/settings.js';
 import cashBookRoutes from './routes/cashBook.js';
+import migrationsRoutes from './routes/migrations.js';
 
 const logger = pino({ level: config.logLevel });
 
@@ -59,6 +61,9 @@ const authLimiter = rateLimit({
   message: { error: 'Zu viele Anmeldeversuche, bitte später erneut versuchen' },
 });
 
+// Maintenance mode guard (must be before routes, after middleware)
+app.use(maintenanceGuard);
+
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -69,6 +74,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 // API routes
+app.use('/api/admin/migrations', migrationsRoutes);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/machines', machineRoutes);
@@ -100,8 +106,15 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-app.listen(config.port, '0.0.0.0', () => {
-  logger.info(
-    `CupTrack v${version.major}.${version.minor}.${version.patch} "${version.codeName}" auf Port ${config.port}`,
-  );
-});
+// Run migrations, then start server
+async function start() {
+  await initMigrations(logger);
+
+  app.listen(config.port, '0.0.0.0', () => {
+    logger.info(
+      `CupTrack v${version.major}.${version.minor}.${version.patch} "${version.codeName}" auf Port ${config.port}`,
+    );
+  });
+}
+
+start();

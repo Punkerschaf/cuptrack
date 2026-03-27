@@ -184,5 +184,18 @@
     "confirmDeleteText": "Soll dieser Kassenbuch-Eintrag wirklich gelöscht werden? Dieser Vorgang kann nicht rückgängig gemacht werden.",
     "errorLoading": "Fehler beim Laden des Kassenbuchs",
     "machine": "Maschine"
+  },
+  "migrations": {
+    "bannerTitle": "Datenbank-Migration erforderlich",
+    "bannerText": "{{count}} manuelle Migration(en) ausstehend. Einige Funktionen sind eingeschränkt, bis die Migration durchgeführt wird.",
+    "runMigration": "Migration durchführen",
+    "dialogTitle": "Datenbank-Migration",
+    "version": "Version",
+    "breakingChanges": "Inkompatible Änderungen",
+    "adminAction": "Aktion erforderlich",
+    "confirm": "Migration jetzt durchführen",
+    "running": "Migration läuft...",
+    "success": "Migration erfolgreich abgeschlossen.",
+    "error": "Migration fehlgeschlagen"
   }
 }
