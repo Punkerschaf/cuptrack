@@ -88,7 +88,7 @@ export const api = {
     request<{
       success: boolean;
       sessionToken: string;
-      user: { id: string; displayName: string; balance: number };
+      user: { id: string; displayName: string; balance: number; totalCoffees: number };
     }>(`/terminal-actions/${encodeURIComponent(slug)}/verify-pin`, {
       method: 'POST',
       body: JSON.stringify({ userId, pin }),
@@ -97,7 +97,7 @@ export const api = {
     request<{
       success: boolean;
       sessionToken: string;
-      user: { id: string; displayName: string; balance: number };
+      user: { id: string; displayName: string; balance: number; totalCoffees: number };
     }>(`/terminal-actions/${encodeURIComponent(slug)}/verify-nfc`, {
       method: 'POST',
       body: JSON.stringify({ serialNumber }),

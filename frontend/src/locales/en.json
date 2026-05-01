@@ -125,6 +125,7 @@
     "countCoffee": "Count coffee",
     "editBalance": "Edit balance",
     "coffeeCounted": "Coffee counted!",
+    "totalCoffeesLabel": "Your total coffees",
     "newBalance": "New balance:",
     "balanceUpdated": "Balance updated!",
     "backToStart": "Returning to start in a few seconds...",

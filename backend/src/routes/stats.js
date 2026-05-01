@@ -9,10 +9,10 @@ router.get('/dashboard', (_req, res) => {
   const now = new Date();
   const archived = archivedStats.get();
 
-  // Coffees today
-  const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    .toISOString()
-    .split('T')[0];
+  const localDate = new Intl.DateTimeFormat('en-CA');
+
+  // Coffees today (local date, consistent with SQLite DATE(..., 'localtime'))
+  const todayStr = localDate.format(now);
   const coffeesToday = logs.countCoffeesForDate(todayStr);
 
   // Total coffees (current + archived) — we need the count of current coffee logs
@@ -23,7 +23,7 @@ router.get('/dashboard', (_req, res) => {
   // Coffees per day (last 30 days)
   const startDate = new Date(now);
   startDate.setDate(startDate.getDate() - 29);
-  const startDateStr = startDate.toISOString().split('T')[0];
+  const startDateStr = localDate.format(startDate);
 
   const dbCoffeesPerDay = logs.coffeesPerDay(startDateStr);
   const dayMap = {};
@@ -33,7 +33,7 @@ router.get('/dashboard', (_req, res) => {
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    const dayStr = date.toISOString().split('T')[0];
+    const dayStr = localDate.format(date);
     coffeesPerDay.push({ date: dayStr, count: dayMap[dayStr] || 0 });
   }
 

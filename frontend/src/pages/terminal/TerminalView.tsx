@@ -56,6 +56,7 @@ export default function TerminalView() {
   );
   const [sessionToken, setSessionToken] = useState('');
   const [balance, setBalance] = useState(0);
+  const [totalCoffees, setTotalCoffees] = useState(0);
   const [newBalance, setNewBalance] = useState('');
   const [alphabetFilter, setAlphabetFilter] = useState<string | null>(null);
   const [nfcScanning, setNfcScanning] = useState(false);
@@ -115,6 +116,7 @@ export default function TerminalView() {
     setPinStatus('idle');
     setSessionToken('');
     setBalance(0);
+    setTotalCoffees(0);
     setNewBalance('');
     setAlphabetFilter(null);
     setNfcScanning(false);
@@ -161,6 +163,7 @@ export default function TerminalView() {
           setSelectedUserName(res.user.displayName);
           setSessionToken(res.sessionToken);
           setBalance(res.user.balance);
+          setTotalCoffees(res.user.totalCoffees);
           setNfcScanning(false);
           setTimeout(() => setStep('menu'), 600);
         } catch {
@@ -215,6 +218,7 @@ export default function TerminalView() {
         setPinStatus('success');
         setSessionToken(res.sessionToken);
         setBalance(res.user.balance);
+        setTotalCoffees(res.user.totalCoffees);
         setTimeout(() => setStep('menu'), 600);
       } catch {
         setPinStatus('error');
@@ -703,7 +707,7 @@ export default function TerminalView() {
         <Box
           sx={{
             textAlign: 'center',
-            mb: 4,
+            mb: 2,
             p: 2,
             borderRadius: 2,
             backgroundColor: balance >= 0 ? '#E8F5E9' : '#FFEBEE',
@@ -718,6 +722,23 @@ export default function TerminalView() {
             color={balance >= 0 ? 'success.main' : 'error.main'}
           >
             {balance.toFixed(2)} €
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            textAlign: 'center',
+            mb: 4,
+            p: 1.5,
+            borderRadius: 2,
+            backgroundColor: '#F5F0EB',
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            {t('terminalView.totalCoffeesLabel')}
+          </Typography>
+          <Typography variant="h4" fontWeight={700} sx={{ color: '#6F4E37', mt: 0.5 }}>
+            {totalCoffees}
           </Typography>
         </Box>
 

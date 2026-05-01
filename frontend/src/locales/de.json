@@ -125,6 +125,7 @@
     "countCoffee": "Kaffee zählen",
     "editBalance": "Guthaben bearbeiten",
     "coffeeCounted": "Kaffee gezählt!",
+    "totalCoffeesLabel": "Deine Kaffees gesamt",
     "newBalance": "Neues Guthaben:",
     "balanceUpdated": "Guthaben aktualisiert!",
     "backToStart": "Zurück zum Start in wenigen Sekunden...",

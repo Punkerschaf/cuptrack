@@ -308,18 +308,22 @@ export const logs = {
   },
 
   countCoffeesForDate(dateStr) {
-    return db.prepare("SELECT COUNT(*) as count FROM logs WHERE type = 'coffee' AND createdAt LIKE ?")
-      .get(dateStr + '%').count;
+    return db.prepare("SELECT COUNT(*) as count FROM logs WHERE type = 'coffee' AND DATE(createdAt, 'localtime') = ?")
+      .get(dateStr).count;
   },
 
   coffeesPerDay(startDateStr) {
     return db.prepare(
-      "SELECT DATE(createdAt) as date, COUNT(*) as count FROM logs WHERE type = 'coffee' AND createdAt >= ? GROUP BY DATE(createdAt)",
-    ).all(startDateStr + 'T00:00:00.000Z');
+      "SELECT DATE(createdAt, 'localtime') as date, COUNT(*) as count FROM logs WHERE type = 'coffee' AND DATE(createdAt, 'localtime') >= ? GROUP BY DATE(createdAt, 'localtime')",
+    ).all(startDateStr);
   },
 
   coffeeCountsByUser() {
     return db.prepare("SELECT userId, COUNT(*) as count FROM logs WHERE type = 'coffee' GROUP BY userId").all();
+  },
+
+  countCoffeesForUser(userId) {
+    return db.prepare("SELECT COUNT(*) as count FROM logs WHERE type = 'coffee' AND userId = ?").get(userId).count;
   },
 
   coffeeCountsByMachine() {

@@ -49,10 +49,12 @@ router.post('/:slug/verify-nfc', (req, res, next) => {
       { expiresIn: '5m' },
     );
 
+    const totalCoffees = logs.countCoffeesForUser(user.id);
+
     res.json({
       success: true,
       sessionToken,
-      user: { id: user.id, displayName: user.displayName, balance: user.balance },
+      user: { id: user.id, displayName: user.displayName, balance: user.balance, totalCoffees },
     });
   } catch (err) {
     next(err);
@@ -79,10 +81,12 @@ router.post('/:slug/verify-pin', (req, res, next) => {
       { expiresIn: '5m' },
     );
 
+    const totalCoffees = logs.countCoffeesForUser(user.id);
+
     res.json({
       success: true,
       sessionToken,
-      user: { id: user.id, displayName: user.displayName, balance: user.balance },
+      user: { id: user.id, displayName: user.displayName, balance: user.balance, totalCoffees },
     });
   } catch (err) {
     next(err);
