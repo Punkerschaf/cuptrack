@@ -1,4 +1,4 @@
-import type { User, Machine, Terminal, LogEntry, DashboardStats, TerminalInfo, CashBookEntry } from './types';
+import type { User, Machine, Terminal, LogEntry, DashboardStats, TerminalInfo, CashBookEntry, MigrationStatus } from './types';
 
 const BASE = '/api';
 
@@ -88,7 +88,7 @@ export const api = {
     request<{
       success: boolean;
       sessionToken: string;
-      user: { id: string; displayName: string; balance: number };
+      user: { id: string; displayName: string; balance: number; totalCoffees: number };
     }>(`/terminal-actions/${encodeURIComponent(slug)}/verify-pin`, {
       method: 'POST',
       body: JSON.stringify({ userId, pin }),
@@ -97,7 +97,7 @@ export const api = {
     request<{
       success: boolean;
       sessionToken: string;
-      user: { id: string; displayName: string; balance: number };
+      user: { id: string; displayName: string; balance: number; totalCoffees: number };
     }>(`/terminal-actions/${encodeURIComponent(slug)}/verify-nfc`, {
       method: 'POST',
       body: JSON.stringify({ serialNumber }),
@@ -161,4 +161,40 @@ export const api = {
       `/terminal-actions/${encodeURIComponent(slug)}/anonymous-coffee`,
       { method: 'POST' },
     ),
+
+  // Terminal: Change PIN
+  changePin: (slug: string, sessionToken: string, newPin: string) =>
+    request<{ success: boolean }>(
+      `/terminal-actions/${encodeURIComponent(slug)}/change-pin`,
+      { method: 'POST', body: JSON.stringify({ sessionToken, newPin }) },
+    ),
+
+  // Terminal: Check username/displayName availability
+  checkUserAvailability: (slug: string, data: { username: string; displayName: string }) =>
+    request<{ usernameAvailable: boolean; displayNameAvailable: boolean }>(
+      `/terminal-actions/${encodeURIComponent(slug)}/check-user-availability`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+
+  // Terminal: Register new user
+  registerUser: (slug: string, data: { username: string; displayName: string; pin: string }) =>
+    request<{ success: boolean; user: { id: string; displayName: string } }>(
+      `/terminal-actions/${encodeURIComponent(slug)}/register-user`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+
+  // Migrations
+  getMigrationStatus: () => request<MigrationStatus>('/admin/migrations'),
+  runMigration: (version: number, confirm: boolean, params?: Record<string, unknown>) =>
+    request<{
+      success: boolean;
+      version: number;
+      name: string;
+      backupPath: string;
+      maintenanceMode: boolean;
+      remainingPending: MigrationStatus['pending'];
+    }>('/admin/migrations/run', {
+      method: 'POST',
+      body: JSON.stringify({ version, confirm, params }),
+    }),
 };

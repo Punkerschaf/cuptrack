@@ -35,6 +35,8 @@ export interface Terminal {
   machine?: Machine | null;
   quickButtons?: { enabled: boolean; button1: number; button2: number };
   alphabetFilter?: { enabled: boolean };
+  pinChangeEnabled?: boolean;
+  selfRegistrationEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +69,8 @@ export interface TerminalInfo {
     slug: string;
     quickButtons?: { enabled: boolean; button1: number; button2: number };
     alphabetFilter?: { enabled: boolean };
+    pinChangeEnabled?: boolean;
+    selfRegistrationEnabled?: boolean;
   };
   machine: {
     id: string;
@@ -86,4 +90,29 @@ export interface CashBookEntry {
   terminalId: string | null;
   performedBy: string;
   createdAt: string;
+}
+
+export interface PendingMigration {
+  version: number;
+  name: string;
+  type: 'auto' | 'manual';
+  description: string;
+  breaking: string[] | null;
+  adminAction: string | null;
+  params: { key: string; label: string; type: string; default?: unknown }[] | null;
+}
+
+export interface AppliedMigration {
+  version: number;
+  name: string;
+  type: 'auto' | 'manual';
+  executedAt: string;
+  executedBy: string;
+}
+
+export interface MigrationStatus {
+  currentVersion: number;
+  maintenanceMode: boolean;
+  applied: AppliedMigration[];
+  pending: PendingMigration[];
 }

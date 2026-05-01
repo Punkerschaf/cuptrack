@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import config from '../config.js';
-import db from '../db.js';
+import { users } from '../dal.js';
 
 export function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -9,7 +9,7 @@ export function authenticateToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
-    const user = db.data.users.find(u => u.id === decoded.userId);
+    const user = users.findById(decoded.userId);
     if (!user) return res.status(401).json({ error: 'Benutzer nicht gefunden' });
     req.user = user;
     next();

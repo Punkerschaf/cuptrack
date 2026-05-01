@@ -373,6 +373,8 @@ function EditTerminalDialog({
     machineId: terminal.machineId,
     quickButtons: terminal.quickButtons || { enabled: false, button1: 5, button2: 10 },
     alphabetFilter: terminal.alphabetFilter || { enabled: true },
+    pinChangeEnabled: terminal.pinChangeEnabled ?? false,
+    selfRegistrationEnabled: terminal.selfRegistrationEnabled ?? false,
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -511,6 +513,32 @@ function EditTerminalDialog({
             }
             label={t('terminals.alphabetFilterEnabled')}
           />
+        </Box>
+
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            {t('terminals.selfService')}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.pinChangeEnabled}
+                onChange={(e) => setForm({ ...form, pinChangeEnabled: e.target.checked })}
+              />
+            }
+            label={t('terminals.pinChangeEnabled')}
+          />
+          <Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form.selfRegistrationEnabled}
+                  onChange={(e) => setForm({ ...form, selfRegistrationEnabled: e.target.checked })}
+                />
+              }
+              label={t('terminals.selfRegistrationEnabled')}
+            />
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between' }}>

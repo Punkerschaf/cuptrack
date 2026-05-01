@@ -2,5 +2,6 @@
   "major": 0,
   "minor": 3,
   "patch": 0,
-  "codeName": "Cold Coffee"
+  "codeName": "Cold Coffee",
+  "schemaVersion": 2
 }

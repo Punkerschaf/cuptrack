@@ -1,63 +1,81 @@
 import { Router } from 'express';
-import db from '../db.js';
+import { logs, users, machines, terminals, archivedStats } from '../dal.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
 router.use(authenticateToken, requireAdmin);
 
-router.get('/dashboard', (req, res) => {
+router.get('/dashboard', (_req, res) => {
   const now = new Date();
-  const coffeeLogs = db.data.logs.filter(l => l.type === 'coffee');
-  const archived = db.data.archivedStats || { totalCoffees: 0, coffeesByUser: {}, coffeesByMachine: {} };
+  const archived = archivedStats.get();
 
-  // Total coffees (current + archived)
-  const totalCoffees = coffeeLogs.length + archived.totalCoffees;
+  const localDate = new Intl.DateTimeFormat('en-CA');
 
-  // Coffees today
-  const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    .toISOString()
-    .split('T')[0];
-  const coffeesToday = coffeeLogs.filter(l => l.createdAt.startsWith(todayStr)).length;
+  // Coffees today (local date, consistent with SQLite DATE(..., 'localtime'))
+  const todayStr = localDate.format(now);
+  const coffeesToday = logs.countCoffeesForDate(todayStr);
+
+  // Total coffees (current + archived) — we need the count of current coffee logs
+  const currentCoffeeCounts = logs.coffeeCountsByUser();
+  const currentTotal = currentCoffeeCounts.reduce((sum, row) => sum + row.count, 0);
+  const totalCoffees = currentTotal + archived.totalCoffees;
 
   // Coffees per day (last 30 days)
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() - 29);
+  const startDateStr = localDate.format(startDate);
+
+  const dbCoffeesPerDay = logs.coffeesPerDay(startDateStr);
+  const dayMap = {};
+  for (const row of dbCoffeesPerDay) dayMap[row.date] = row.count;
+
   const coffeesPerDay = [];
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    const dayStr = date.toISOString().split('T')[0];
-    const count = coffeeLogs.filter(l => l.createdAt.startsWith(dayStr)).length;
-    coffeesPerDay.push({ date: dayStr, count });
+    const dayStr = localDate.format(date);
+    coffeesPerDay.push({ date: dayStr, count: dayMap[dayStr] || 0 });
   }
 
   // Top drinkers (current + archived)
   const drinkerCounts = { ...archived.coffeesByUser };
-  coffeeLogs.forEach(l => {
-    drinkerCounts[l.userId] = (drinkerCounts[l.userId] || 0) + 1;
-  });
+  for (const row of currentCoffeeCounts) {
+    drinkerCounts[row.userId] = (drinkerCounts[row.userId] || 0) + row.count;
+  }
+  const allUsers = users.findAll();
+  const userMap = {};
+  for (const u of allUsers) userMap[u.id] = u.displayName;
+
   const topDrinkers = Object.entries(drinkerCounts)
-    .map(([userId, count]) => {
-      const user = db.data.users.find(u => u.id === userId);
-      return { userId, displayName: user?.displayName || 'Unbekannt', count };
-    })
+    .map(([userId, count]) => ({
+      userId,
+      displayName: userMap[userId] || 'Unbekannt',
+      count,
+    }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
   // Popular machines (current + archived)
   const machineCounts = { ...archived.coffeesByMachine };
-  coffeeLogs.forEach(l => {
-    if (l.machineId) machineCounts[l.machineId] = (machineCounts[l.machineId] || 0) + 1;
-  });
+  for (const row of logs.coffeeCountsByMachine()) {
+    machineCounts[row.machineId] = (machineCounts[row.machineId] || 0) + row.count;
+  }
+  const allMachines = machines.findAll();
+  const machineMap = {};
+  for (const m of allMachines) machineMap[m.id] = m.name;
+
   const popularMachines = Object.entries(machineCounts)
-    .map(([machineId, count]) => {
-      const machine = db.data.machines.find(m => m.id === machineId);
-      return { machineId, name: machine?.name || 'Unbekannt', count };
-    })
+    .map(([machineId, count]) => ({
+      machineId,
+      name: machineMap[machineId] || 'Unbekannt',
+      count,
+    }))
     .sort((a, b) => b.count - a.count);
 
   // Totals
-  const totalUsers = db.data.users.filter(u => u.type === 'drinker').length;
-  const totalMachines = db.data.machines.length;
-  const totalTerminals = db.data.terminals.length;
+  const totalUsers = users.countDrinkers();
+  const totalMachines = machines.count();
+  const totalTerminals = terminals.count();
 
   res.json({
     totalCoffees,

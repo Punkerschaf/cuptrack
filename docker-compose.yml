@@ -1,0 +1,13 @@
+services:
+  cuptrack:
+    build: .
+    container_name: cuptrack
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/data:/app/backend/data
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=production
