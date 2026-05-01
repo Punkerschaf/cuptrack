@@ -13,6 +13,7 @@
     "confirmDelete": "Wirklich löschen?",
     "error": "Fehler",
     "back": "Zurück",
+    "next": "Weiter",
     "name": "Name",
     "type": "Typ",
     "actions": "Aktionen",
@@ -104,7 +105,10 @@
     "quickButton1": "Betrag Button 1 (€)",
     "quickButton2": "Betrag Button 2 (€)",
     "alphabetFilter": "Alphabet-Filter",
-    "alphabetFilterEnabled": "Alphabet-Filter in Benutzerliste aktivieren"
+    "alphabetFilterEnabled": "Alphabet-Filter in Benutzerliste aktivieren",
+    "selfService": "Self Service",
+    "pinChangeEnabled": "PIN-Änderung im Terminal aktivieren",
+    "selfRegistrationEnabled": "Selbstregistrierung im Terminal aktivieren"
   },
   "terminalView": {
     "selectName": "Wähle deinen Namen:",
@@ -132,7 +136,22 @@
     "resetBalance": "Guthaben auf 0 setzen",
     "newBalanceLabel": "Neues Guthaben (€)",
     "confirm": "Bestätigen",
-    "terminalNotFound": "Terminal nicht gefunden"
+    "terminalNotFound": "Terminal nicht gefunden",
+    "changePinButton": "PIN ändern",
+    "newPinFor": "Neuer PIN für <strong>{{name}}</strong>",
+    "pinChanged": "PIN erfolgreich geändert",
+    "newUser": "Neuer Benutzer",
+    "newUserFormTitle": "Neuen Benutzer anlegen",
+    "usernameLabel": "Benutzername",
+    "usernameHint": "z.B. maxmustermann",
+    "displayNameLabel": "Anzeigename",
+    "displayNameHint": "z.B. Max",
+    "newUserPinFor": "PIN wählen für <strong>{{name}}</strong>",
+    "userCreated": "Benutzer {{name}} wurde angelegt",
+    "usernameTaken": "Benutzername bereits vergeben",
+    "displayNameTaken": "Anzeigename bereits vergeben",
+    "fieldRequired": "Dieses Feld ist erforderlich",
+    "usernameFormatError": "Nur Kleinbuchstaben, Zahlen, Punkte, _ und -"
   },
   "logs": {
     "coffee": "Kaffee gezählt",
@@ -142,7 +161,9 @@
     "userDeleted": "Benutzer gelöscht",
     "cashbook": "Kassenbuch",
     "anonymousCoffee": "Gast-Kaffee",
-    "balanceTopUp": "Guthaben aufgeladen (Kassenbuch)"
+    "balanceTopUp": "Guthaben aufgeladen (Kassenbuch)",
+    "pin_change": "PIN geändert",
+    "user_registered": "Benutzer registriert"
   },
   "settings": {
     "title": "Systemeinstellungen",

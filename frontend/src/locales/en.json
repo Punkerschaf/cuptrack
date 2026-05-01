@@ -13,6 +13,7 @@
     "confirmDelete": "Really delete?",
     "error": "Error",
     "back": "Back",
+    "next": "Next",
     "name": "Name",
     "type": "Type",
     "actions": "Actions",
@@ -104,7 +105,10 @@
     "quickButton1": "Amount Button 1 (€)",
     "quickButton2": "Amount Button 2 (€)",
     "alphabetFilter": "Alphabet Filter",
-    "alphabetFilterEnabled": "Enable alphabet filter in user list"
+    "alphabetFilterEnabled": "Enable alphabet filter in user list",
+    "selfService": "Self Service",
+    "pinChangeEnabled": "Enable PIN change in terminal",
+    "selfRegistrationEnabled": "Enable self-registration in terminal"
   },
   "terminalView": {
     "selectName": "Select your name:",
@@ -132,7 +136,22 @@
     "resetBalance": "Reset balance to 0",
     "newBalanceLabel": "New balance (€)",
     "confirm": "Confirm",
-    "terminalNotFound": "Terminal not found"
+    "terminalNotFound": "Terminal not found",
+    "changePinButton": "Change PIN",
+    "newPinFor": "New PIN for <strong>{{name}}</strong>",
+    "pinChanged": "PIN changed successfully",
+    "newUser": "New User",
+    "newUserFormTitle": "Register New User",
+    "usernameLabel": "Username",
+    "usernameHint": "e.g. johndoe",
+    "displayNameLabel": "Display Name",
+    "displayNameHint": "e.g. John",
+    "newUserPinFor": "Choose PIN for <strong>{{name}}</strong>",
+    "userCreated": "User {{name}} was registered",
+    "usernameTaken": "Username already taken",
+    "displayNameTaken": "Display name already taken",
+    "fieldRequired": "This field is required",
+    "usernameFormatError": "Only lowercase letters, numbers, dots, _ and -"
   },
   "logs": {
     "coffee": "Coffee counted",
@@ -142,7 +161,9 @@
     "userDeleted": "User deleted",
     "cashbook": "Cash Book",
     "anonymousCoffee": "Guest Coffee",
-    "balanceTopUp": "Balance top-up (Cash Book)"
+    "balanceTopUp": "Balance top-up (Cash Book)",
+    "pin_change": "PIN changed",
+    "user_registered": "User registered"
   },
   "settings": {
     "title": "System Settings",

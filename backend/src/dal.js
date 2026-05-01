@@ -36,6 +36,8 @@ function toTerminal(row) {
     alphabetFilter: {
       enabled: !!row.alphabetFilterEnabled,
     },
+    pinChangeEnabled: !!row.pinChangeEnabled,
+    selfRegistrationEnabled: !!row.selfRegistrationEnabled,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -88,6 +90,19 @@ export const users = {
 
   pinExists(pin) {
     return !!db.prepare("SELECT 1 FROM identifiers WHERE type = 'pin' AND value = ?").get(pin);
+  },
+
+  displayNameExists(displayName) {
+    return !!db.prepare('SELECT 1 FROM users WHERE LOWER(displayName) = LOWER(?)').get(displayName);
+  },
+
+  updatePinIdentifier(userId, newPin) {
+    const existing = db.prepare("SELECT id FROM identifiers WHERE userId = ? AND type = 'pin'").get(userId);
+    if (existing) {
+      db.prepare("UPDATE identifiers SET value = ? WHERE id = ?").run(newPin, existing.id);
+    } else {
+      db.prepare('INSERT INTO identifiers (id, type, value, userId) VALUES (?, ?, ?, ?)').run(uuidv4(), 'pin', newPin, userId);
+    }
   },
 
   create(userData) {

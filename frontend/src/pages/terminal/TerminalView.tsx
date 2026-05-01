@@ -18,6 +18,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BackspaceIcon from '@mui/icons-material/Backspace';
 import NfcIcon from '@mui/icons-material/Nfc';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import LockIcon from '@mui/icons-material/Lock';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api';
 import type { TerminalInfo } from '../../types';
@@ -29,7 +32,12 @@ type Step =
   | 'counting'
   | 'editBalance'
   | 'balanceUpdated'
-  | 'guestCoffeeCounted';
+  | 'guestCoffeeCounted'
+  | 'changePin'
+  | 'changePinSuccess'
+  | 'newUserForm'
+  | 'newUserPin'
+  | 'newUserSuccess';
 
 export default function TerminalView() {
   const { terminalName } = useParams<{ terminalName: string }>();
@@ -57,6 +65,16 @@ export default function TerminalView() {
   const [codeName, setCodeName] = useState('');
   const [connected, setConnected] = useState(true);
   const [guestCoffeePrice, setGuestCoffeePrice] = useState(0);
+
+  // Self-service state
+  const [newPin, setNewPin] = useState('');
+  const [newPinStatus, setNewPinStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [newUserUsername, setNewUserUsername] = useState('');
+  const [newUserDisplayName, setNewUserDisplayName] = useState('');
+  const [newUserUsernameError, setNewUserUsernameError] = useState('');
+  const [newUserDisplayNameError, setNewUserDisplayNameError] = useState('');
+  const [newUserFormLoading, setNewUserFormLoading] = useState(false);
+  const [newUserActionError, setNewUserActionError] = useState('');
 
   useEffect(() => {
     api.getVersion().then((v) => setCodeName(v.codeName)).catch(() => {});
@@ -102,6 +120,14 @@ export default function TerminalView() {
     setNfcScanning(false);
     setNfcStatus('idle');
     setNfcError('');
+    setNewPin('');
+    setNewPinStatus('idle');
+    setNewUserUsername('');
+    setNewUserDisplayName('');
+    setNewUserUsernameError('');
+    setNewUserDisplayNameError('');
+    setNewUserFormLoading(false);
+    setNewUserActionError('');
     loadInfo();
   }, [loadInfo]);
 
@@ -164,7 +190,7 @@ export default function TerminalView() {
 
   // Auto-redirect after confirmation screens
   useEffect(() => {
-    if (step === 'counting' || step === 'balanceUpdated' || step === 'guestCoffeeCounted') {
+    if (step === 'counting' || step === 'balanceUpdated' || step === 'guestCoffeeCounted' || step === 'changePinSuccess' || step === 'newUserSuccess') {
       const timer = setTimeout(resetToHome, 3000);
       return () => clearTimeout(timer);
     }
@@ -256,6 +282,56 @@ export default function TerminalView() {
       setStep('guestCoffeeCounted');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t('common.error'));
+    }
+  };
+
+  const handleNewPinDigit = async (digit: string, mode: 'changePin' | 'newUserPin') => {
+    if (newPinStatus !== 'idle') return;
+    const next = newPin + digit;
+    setNewPin(next);
+
+    if (next.length === 4) {
+      if (mode === 'changePin' && terminalName) {
+        try {
+          await api.changePin(terminalName, sessionToken, next);
+          setNewPinStatus('success');
+          setTimeout(() => setStep('changePinSuccess'), 600);
+        } catch {
+          setNewPinStatus('error');
+          setTimeout(() => {
+            setNewPin('');
+            setNewPinStatus('idle');
+          }, 1000);
+        }
+      }
+      // newUserPin: just store it, user confirms via button
+    }
+  };
+
+  const handleNewPinBackspace = () => {
+    if (newPinStatus !== 'idle') return;
+    setNewPin(newPin.slice(0, -1));
+  };
+
+  const handleRegisterUser = async () => {
+    if (!terminalName || newPin.length !== 4) return;
+    setNewUserActionError('');
+    try {
+      await api.registerUser(terminalName, {
+        username: newUserUsername.trim(),
+        displayName: newUserDisplayName.trim(),
+        pin: newPin,
+      });
+      setStep('newUserSuccess');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : t('common.error');
+      if (msg.includes('Benutzername') || msg.includes('Username') || msg.includes('username')) {
+        setNewUserActionError(t('terminalView.usernameTaken'));
+      } else if (msg.includes('Anzeigename') || msg.includes('Display') || msg.includes('displayName')) {
+        setNewUserActionError(t('terminalView.displayNameTaken'));
+      } else {
+        setNewUserActionError(msg);
+      }
     }
   };
 
@@ -449,8 +525,8 @@ export default function TerminalView() {
           </List>
         </Paper>
 
-        {/* Guest Coffee Button */}
-        <Box sx={{ textAlign: 'center', mt: 2, flexShrink: 0 }}>
+        {/* Guest Coffee + New User Buttons */}
+        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 2, flexShrink: 0, flexWrap: 'wrap' }}>
           <Button
             variant="outlined"
             size="large"
@@ -458,7 +534,7 @@ export default function TerminalView() {
             onClick={handleGuestCoffee}
             sx={{
               py: 1.5,
-              px: 4,
+              px: 3,
               fontSize: '1.1rem',
               color: '#6F4E37',
               borderColor: '#6F4E37',
@@ -475,6 +551,35 @@ export default function TerminalView() {
               </Typography>
             )}
           </Button>
+
+          {info.terminal.selfRegistrationEnabled && (
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<PersonAddIcon />}
+              onClick={() => {
+                setNewUserUsername('');
+                setNewUserDisplayName('');
+                setNewUserUsernameError('');
+                setNewUserDisplayNameError('');
+                setNewUserFormLoading(false);
+                setNewUserActionError('');
+                setNewPin('');
+                setNewPinStatus('idle');
+                setStep('newUserForm');
+              }}
+              sx={{
+                py: 1.5,
+                px: 3,
+                fontSize: '1.1rem',
+                color: '#6F4E37',
+                borderColor: '#6F4E37',
+                '&:hover': { backgroundColor: '#FAF6F1', borderColor: '#4E3524' },
+              }}
+            >
+              {t('terminalView.newUser')}
+            </Button>
+          )}
         </Box>
       </TerminalWrapper>
     );
@@ -660,6 +765,22 @@ export default function TerminalView() {
           >
             {t('terminalView.editBalance')}
           </Button>
+
+          {info.terminal.pinChangeEnabled && (
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<LockIcon />}
+              onClick={() => {
+                setNewPin('');
+                setNewPinStatus('idle');
+                setStep('changePin');
+              }}
+              sx={{ py: 2 }}
+            >
+              {t('terminalView.changePinButton')}
+            </Button>
+          )}
 
           <Button
             variant="text"
@@ -855,6 +976,394 @@ export default function TerminalView() {
           <LocalCafeIcon sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
           <Typography variant="h4" fontWeight={700} color="success.main">
             {t('terminalView.guestCoffeeSuccess', { price: guestCoffeePrice.toFixed(2) })}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 2 }}>
+            {t('terminalView.backToStart')}
+          </Typography>
+        </Box>
+      </TerminalWrapper>
+    );
+  }
+
+  // ─── Change PIN ───
+  if (step === 'changePin') {
+    const bgColor =
+      newPinStatus === 'success'
+        ? '#4CAF50'
+        : newPinStatus === 'error'
+          ? '#F44336'
+          : 'transparent';
+
+    return (
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => setStep('menu')}
+          sx={{ mb: 2 }}
+        >
+          {t('common.back')}
+        </Button>
+        <Typography
+          variant="h5"
+          textAlign="center"
+          gutterBottom
+          dangerouslySetInnerHTML={{ __html: t('terminalView.newPinFor', { name: selectedUserName }) }}
+        />
+
+        {/* PIN dots */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 2,
+            my: 3,
+            p: 2,
+            borderRadius: 2,
+            backgroundColor: bgColor,
+            transition: 'background-color 0.3s',
+          }}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                border: '2px solid',
+                borderColor:
+                  newPinStatus === 'success' || newPinStatus === 'error'
+                    ? 'white'
+                    : '#6F4E37',
+                backgroundColor:
+                  i < newPin.length
+                    ? newPinStatus === 'success' || newPinStatus === 'error'
+                      ? 'white'
+                      : '#6F4E37'
+                    : 'transparent',
+                transition: 'all 0.2s',
+              }}
+            />
+          ))}
+        </Box>
+
+        {/* Numpad */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 1.5,
+            mx: 'auto',
+            width: '100%',
+          }}
+        >
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'back'].map((key) => {
+            if (key === '') return <Box key="empty" />;
+            if (key === 'back')
+              return (
+                <Button
+                  key="back"
+                  variant="outlined"
+                  onClick={handleNewPinBackspace}
+                  sx={{ py: 2, fontSize: '1.2rem' }}
+                >
+                  <BackspaceIcon />
+                </Button>
+              );
+            return (
+              <Button
+                key={key}
+                variant="outlined"
+                onClick={() => handleNewPinDigit(key, 'changePin')}
+                sx={{
+                  py: 2,
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  color: '#6F4E37',
+                  borderColor: '#6F4E37',
+                  '&:hover': { backgroundColor: '#FAF6F1' },
+                }}
+              >
+                {key}
+              </Button>
+            );
+          })}
+        </Box>
+      </TerminalWrapper>
+    );
+  }
+
+  // ─── Change PIN Success ───
+  if (step === 'changePinSuccess') {
+    return (
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CheckCircleIcon sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
+          <Typography variant="h4" fontWeight={700} color="success.main">
+            {t('terminalView.pinChanged')}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 2 }}>
+            {t('terminalView.backToStart')}
+          </Typography>
+        </Box>
+      </TerminalWrapper>
+    );
+  }
+
+  // ─── New User Form ───
+  if (step === 'newUserForm') {
+    const handleWeiter = async () => {
+      if (!terminalName) return;
+      const u = newUserUsername.trim();
+      const d = newUserDisplayName.trim();
+
+      let hasError = false;
+      if (!u) {
+        setNewUserUsernameError(t('terminalView.fieldRequired'));
+        hasError = true;
+      } else if (!/^[a-z0-9_.\-]+$/.test(u)) {
+        setNewUserUsernameError(t('terminalView.usernameFormatError'));
+        hasError = true;
+      } else {
+        setNewUserUsernameError('');
+      }
+      if (!d) {
+        setNewUserDisplayNameError(t('terminalView.fieldRequired'));
+        hasError = true;
+      } else {
+        setNewUserDisplayNameError('');
+      }
+      if (hasError) return;
+
+      setNewUserFormLoading(true);
+      try {
+        const result = await api.checkUserAvailability(terminalName, { username: u, displayName: d });
+        let resultHasError = false;
+        if (!result.usernameAvailable) {
+          setNewUserUsernameError(t('terminalView.usernameTaken'));
+          resultHasError = true;
+        }
+        if (!result.displayNameAvailable) {
+          setNewUserDisplayNameError(t('terminalView.displayNameTaken'));
+          resultHasError = true;
+        }
+        if (!resultHasError) {
+          setNewPin('');
+          setNewPinStatus('idle');
+          setStep('newUserPin');
+        }
+      } catch {
+        setNewUserUsernameError(t('common.error'));
+      } finally {
+        setNewUserFormLoading(false);
+      }
+    };
+
+    return (
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={resetToHome}
+          sx={{ mb: 2 }}
+        >
+          {t('common.back')}
+        </Button>
+        <Typography variant="h5" textAlign="center" gutterBottom>
+          {t('terminalView.newUserFormTitle')}
+        </Typography>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+          <TextField
+            fullWidth
+            label={t('terminalView.usernameLabel')}
+            value={newUserUsername}
+            onChange={(e) => {
+              setNewUserUsername(e.target.value);
+              if (newUserUsernameError) setNewUserUsernameError('');
+            }}
+            error={!!newUserUsernameError}
+            helperText={newUserUsernameError || t('terminalView.usernameHint')}
+            inputProps={{ autoCapitalize: 'none', autoCorrect: 'off' }}
+            disabled={newUserFormLoading}
+          />
+          <TextField
+            fullWidth
+            label={t('terminalView.displayNameLabel')}
+            value={newUserDisplayName}
+            onChange={(e) => {
+              setNewUserDisplayName(e.target.value);
+              if (newUserDisplayNameError) setNewUserDisplayNameError('');
+            }}
+            error={!!newUserDisplayNameError}
+            helperText={newUserDisplayNameError || t('terminalView.displayNameHint')}
+            disabled={newUserFormLoading}
+          />
+        </Box>
+
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={handleWeiter}
+            disabled={newUserFormLoading}
+            sx={{
+              py: 2,
+              px: 4,
+              backgroundColor: '#6F4E37',
+              '&:hover': { backgroundColor: '#4E3524' },
+            }}
+          >
+            {newUserFormLoading ? <CircularProgress size={24} color="inherit" /> : t('common.next')}
+          </Button>
+        </Box>
+      </TerminalWrapper>
+    );
+  }
+
+  // ─── New User PIN Entry ───
+  if (step === 'newUserPin') {
+    const bgColor =
+      newPinStatus === 'success'
+        ? '#4CAF50'
+        : newPinStatus === 'error'
+          ? '#F44336'
+          : 'transparent';
+
+    return (
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => {
+            setNewPin('');
+            setNewPinStatus('idle');
+            setStep('newUserForm');
+          }}
+          sx={{ mb: 2 }}
+        >
+          {t('common.back')}
+        </Button>
+        <Typography
+          variant="h5"
+          textAlign="center"
+          gutterBottom
+          dangerouslySetInnerHTML={{ __html: t('terminalView.newUserPinFor', { name: newUserDisplayName }) }}
+        />
+
+        {newUserActionError && (
+          <Alert severity="error" sx={{ mb: 1 }}>
+            {newUserActionError}
+          </Alert>
+        )}
+
+        {/* PIN dots */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 2,
+            my: 3,
+            p: 2,
+            borderRadius: 2,
+            backgroundColor: bgColor,
+            transition: 'background-color 0.3s',
+          }}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                border: '2px solid',
+                borderColor:
+                  newPinStatus === 'success' || newPinStatus === 'error'
+                    ? 'white'
+                    : '#6F4E37',
+                backgroundColor:
+                  i < newPin.length
+                    ? newPinStatus === 'success' || newPinStatus === 'error'
+                      ? 'white'
+                      : '#6F4E37'
+                    : 'transparent',
+                transition: 'all 0.2s',
+              }}
+            />
+          ))}
+        </Box>
+
+        {/* Numpad */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 1.5,
+            mx: 'auto',
+            width: '100%',
+          }}
+        >
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'back'].map((key) => {
+            if (key === '') return <Box key="empty" />;
+            if (key === 'back')
+              return (
+                <Button
+                  key="back"
+                  variant="outlined"
+                  onClick={handleNewPinBackspace}
+                  sx={{ py: 2, fontSize: '1.2rem' }}
+                >
+                  <BackspaceIcon />
+                </Button>
+              );
+            return (
+              <Button
+                key={key}
+                variant="outlined"
+                onClick={() => handleNewPinDigit(key, 'newUserPin')}
+                sx={{
+                  py: 2,
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  color: '#6F4E37',
+                  borderColor: '#6F4E37',
+                  '&:hover': { backgroundColor: '#FAF6F1' },
+                }}
+              >
+                {key}
+              </Button>
+            );
+          })}
+        </Box>
+
+        {/* Confirm button – active when 4 digits entered */}
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Button
+            variant="contained"
+            size="large"
+            disabled={newPin.length !== 4}
+            onClick={handleRegisterUser}
+            sx={{
+              py: 2,
+              px: 4,
+              backgroundColor: '#6F4E37',
+              '&:hover': { backgroundColor: '#4E3524' },
+            }}
+          >
+            {t('terminalView.confirm')}
+          </Button>
+        </Box>
+      </TerminalWrapper>
+    );
+  }
+
+  // ─── New User Success ───
+  if (step === 'newUserSuccess') {
+    return (
+      <TerminalWrapper codeName={codeName} terminalName={info.terminal.name} connected={connected}>
+        <Box sx={{ textAlign: 'center' }}>
+          <PersonAddIcon sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
+          <Typography variant="h4" fontWeight={700} color="success.main">
+            {t('terminalView.userCreated', { name: newUserDisplayName })}
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 2 }}>
             {t('terminalView.backToStart')}

@@ -35,6 +35,8 @@ export interface Terminal {
   machine?: Machine | null;
   quickButtons?: { enabled: boolean; button1: number; button2: number };
   alphabetFilter?: { enabled: boolean };
+  pinChangeEnabled?: boolean;
+  selfRegistrationEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +69,8 @@ export interface TerminalInfo {
     slug: string;
     quickButtons?: { enabled: boolean; button1: number; button2: number };
     alphabetFilter?: { enabled: boolean };
+    pinChangeEnabled?: boolean;
+    selfRegistrationEnabled?: boolean;
   };
   machine: {
     id: string;

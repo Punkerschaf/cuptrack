@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import config from '../config.js';
 import { users, machines, terminals, logs, cashBook } from '../dal.js';
-import { verifyPinSchema, verifyNfcSchema, sessionTokenSchema, updateBalanceSchema } from '../validators/index.js';
+import { verifyPinSchema, verifyNfcSchema, sessionTokenSchema, updateBalanceSchema, changePinSchema, registerUserSchema } from '../validators/index.js';
 
 const router = Router();
 
@@ -22,6 +22,8 @@ router.get('/:slug', (req, res) => {
       slug: terminal.slug,
       quickButtons: terminal.quickButtons || { enabled: false, button1: 5, button2: 10 },
       alphabetFilter: terminal.alphabetFilter || { enabled: true },
+      pinChangeEnabled: terminal.pinChangeEnabled ?? false,
+      selfRegistrationEnabled: terminal.selfRegistrationEnabled ?? false,
     },
     machine: machine
       ? { id: machine.id, name: machine.name, room: machine.room, pricePerCoffee: machine.pricePerCoffee }
@@ -233,6 +235,107 @@ router.post('/:slug/update-balance', (req, res, next) => {
     }
 
     res.json({ success: true, newBalance });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Check username/displayName availability (no auth required)
+router.post('/:slug/check-user-availability', (req, res, next) => {
+  try {
+    const terminal = terminals.findBySlug(req.params.slug);
+    if (!terminal) return res.status(404).json({ error: 'Terminal nicht gefunden' });
+    if (!terminal.selfRegistrationEnabled) {
+      return res.status(403).json({ error: 'Selbstregistrierung an diesem Terminal nicht aktiviert' });
+    }
+
+    const { username, displayName } = req.body;
+    const usernameAvailable = username ? !users.usernameExists(username.trim()) : true;
+    const displayNameAvailable = displayName ? !users.displayNameExists(displayName.trim()) : true;
+
+    res.json({ usernameAvailable, displayNameAvailable });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Change PIN (requires active session)
+router.post('/:slug/change-pin', (req, res, next) => {
+  try {
+    const session = verifySession(req, res);
+    if (!session) return;
+
+    const { terminal, user } = session;
+
+    if (!terminal.pinChangeEnabled) {
+      return res.status(403).json({ error: 'PIN-Änderung an diesem Terminal nicht aktiviert' });
+    }
+
+    const { newPin } = changePinSchema.parse(req.body);
+
+    users.updatePinIdentifier(user.id, newPin);
+
+    logs.create({
+      id: uuidv4(),
+      type: 'pin_change',
+      userId: user.id,
+      machineId: null,
+      terminalId: terminal.id,
+      details: {},
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Self-register new user (no auth required)
+router.post('/:slug/register-user', (req, res, next) => {
+  try {
+    const terminal = terminals.findBySlug(req.params.slug);
+    if (!terminal) return res.status(404).json({ error: 'Terminal nicht gefunden' });
+
+    if (!terminal.selfRegistrationEnabled) {
+      return res.status(403).json({ error: 'Selbstregistrierung an diesem Terminal nicht aktiviert' });
+    }
+
+    const { username, displayName, pin } = registerUserSchema.parse(req.body);
+
+    if (users.usernameExists(username)) {
+      return res.status(409).json({ error: 'Benutzername bereits vergeben', field: 'username' });
+    }
+    if (users.displayNameExists(displayName)) {
+      return res.status(409).json({ error: 'Anzeigename bereits vergeben', field: 'displayName' });
+    }
+
+    const now = new Date().toISOString();
+    const newUser = users.create({
+      id: uuidv4(),
+      username,
+      displayName,
+      password: '',
+      type: 'drinker',
+      isRoot: false,
+      balance: 0,
+      apiKey: null,
+      createdAt: now,
+      updatedAt: now,
+      identifiers: [{ id: uuidv4(), type: 'pin', value: pin }],
+    });
+
+    logs.create({
+      id: uuidv4(),
+      type: 'user_registered',
+      userId: newUser.id,
+      machineId: null,
+      terminalId: terminal.id,
+      details: { username, displayName },
+      createdAt: now,
+    });
+
+    res.json({ success: true, user: { id: newUser.id, displayName: newUser.displayName } });
   } catch (err) {
     next(err);
   }

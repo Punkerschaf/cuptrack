@@ -63,9 +63,25 @@ export const updateTerminalSchema = z.object({
   alphabetFilter: z.object({
     enabled: z.boolean(),
   }).optional(),
+  pinChangeEnabled: z.boolean().optional(),
+  selfRegistrationEnabled: z.boolean().optional(),
 });
 
 // ─── Terminal Actions ───────────────────────────────────────
+
+export const changePinSchema = z.object({
+  sessionToken: z.string().min(1, 'Session-Token erforderlich'),
+  newPin: z.string().regex(/^[0-9]{4}$/, 'PIN muss genau 4 Ziffern haben'),
+});
+
+export const registerUserSchema = z.object({
+  username: z.string()
+    .min(1, 'Benutzername erforderlich')
+    .max(30, 'Benutzername zu lang')
+    .regex(/^[a-z0-9_.\-]+$/, 'Benutzername darf nur Kleinbuchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten'),
+  displayName: z.string().min(1, 'Anzeigename erforderlich').max(50, 'Anzeigename zu lang'),
+  pin: z.string().regex(/^[0-9]{4}$/, 'PIN muss genau 4 Ziffern haben'),
+});
 
 export const verifyPinSchema = z.object({
   userId: z.string().min(1),

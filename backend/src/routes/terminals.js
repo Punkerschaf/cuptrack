@@ -81,6 +81,12 @@ router.put('/:id', (req, res, next) => {
     if (data.alphabetFilter !== undefined) {
       updates.alphabetFilterEnabled = data.alphabetFilter.enabled ? 1 : 0;
     }
+    if (data.pinChangeEnabled !== undefined) {
+      updates.pinChangeEnabled = data.pinChangeEnabled ? 1 : 0;
+    }
+    if (data.selfRegistrationEnabled !== undefined) {
+      updates.selfRegistrationEnabled = data.selfRegistrationEnabled ? 1 : 0;
+    }
     if (data.name !== undefined) {
       const slug = generateSlug(data.name);
       if (terminals.slugExists(slug, req.params.id)) {
